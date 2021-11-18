@@ -1,0 +1,24 @@
+{
+  "name": "care_tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" ",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cloudinary": "^1.27.1",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.2.1",
+    "firebase-admin": "^10.0.0",
+    "fs": "0.0.1-security",
+    "mongodb": "^4.1.4",
+    "multer": "^1.4.3",
+    "qrcode": "^1.4.4"
+  }
+}
