@@ -254,7 +254,11 @@ app.get('/', async function (req, res) {
     // console.log(insert);
     res.send('Welcome to Care Tracker Backend CI/CD')
 })
+app.post('/upload_test', async function(req, res) {
+    console.log ('request params', req.body)
+    console.log ('request files', req.files)
 
+})
 app.post('/create_profile', async function(req, res) {
     var params = JSON.parse(JSON.stringify(req.body));
     console.log ('request params', req.body)
