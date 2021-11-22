@@ -1,6 +1,6 @@
 require('dotenv').config()
-var loginRouter = require('./routes/login');
-var userRouter = require('./routes/user');
+// var loginRouter = require('./routes/login');
+// var userRouter = require('./routes/user');
 // var express = require('express');
 // var fileUpload = require('express-fileupload');
 
