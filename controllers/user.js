@@ -1,38 +1,23 @@
 require('dotenv').config()
-var express = require('express');
-var multer = require('multer');
-var cors = require("cors");
-var fileUpload = require('express-fileupload');
-var upload = multer();
+var unlink  =  require('fs').unlink;
+// var express = require('express');
+// var multer = require('multer');
+// var cors = require("cors");
+
+var MongoClient = require('mongodb').MongoClient;
+var ObjectId = require('mongodb').ObjectID;
 var admin = require("firebase-admin");
-var serviceAccount = require("../caretracker-16078-firebase-adminsdk-zm8yx-a2d439dc7c.json");
 var cloudinary = require('cloudinary');
-var QRCode = require('qrcode')
 cloudinary.config({ 
     cloud_name: 'n10eta', 
     api_key: '153456775719431', 
     api_secret: 'YM_yp58wr59ojC76EL4uLn3omtA',
     secure: true
   });
-var unlink  =  require('fs').unlink;
-var MongoClient = require('mongodb').MongoClient;
-var ObjectId = require('mongodb').ObjectID;
-var app = express();
+var QRCode = require('qrcode')
 const tesseract = require("node-tesseract-ocr")
-app.use(cors());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-// app.use(upload.array()); 
-app.use(fileUpload({
-    useTempFiles : true,
-    tempFileDir : '/tmp/'
-}));
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
 
-// Login api, that will recive FIrebase access token 
-// and verify it with firebase admin sdk
+var models = require('../models/models')
 
 async function validate_user (access_token){
     var resp;
@@ -50,7 +35,7 @@ async function validate_user (access_token){
 }
 async function upload_file (file, folder_name){
     var file_url;
-    await cloudinary.uploader.upload(file.tempFilePath,  function(error, result) {console.log(error, result); file_url = error.url}, {
+    await cloudinary.uploader.upload(file.tempFilePath,  function(error, result) { file_url = error.url}, {
         folder: folder_name,
         use_filename: true,
         unique_filename : true,
@@ -66,114 +51,25 @@ async function upload_local_file (file, folder_name){
         });
     return file_url;
 }
-async function insert_data (collection_name, data){
-    var response;
-    var _db
-    var dbcon = await MongoClient.connect(process.env.MONGO_URL);
-    // await MongoClient.connect(process.env.MONGO_URL, async function (err, db) {
-    //     if (!err) {
-    //         _db = db.db('care_tracker');
-    //         console.log ("_db", _db)
-    //         // const insert = await _db.collection(collection_name).insertOne(data);
-    //         // if (insert.acknowledged) {
-    //         //     response = insert.insertedId;
-    //         //     console.log(response);
-    //         // } else {
-    //         //     response = false;
-    //         // }
-    //         // db.close();
-    //     }
-    // });
-    var db = dbcon.db('care_tracker')
-    // console.log(db, 'asasas');
-    const insert = await db.collection(collection_name).insertOne(data);
-    if (insert.acknowledged) {
-        response = insert.insertedId;
-        console.log('insert', response);
-    } else {
-        response = false;
-    }
-    return response
-}
-app.post('/login',function (req, res) {   
-    var params = JSON.parse(JSON.stringify(req.body));
-    // console.log(test)
-    admin.auth()
-    .verifyIdToken(params.access_token)
-    .then((decodedToken) => {
-        const uid = decodedToken.uid;
-        console.log ('FB res', decodedToken)
-        MongoClient.connect(process.env.MONGO_URL,async function (err, db){
-            if (!err) {
-                console.log('Connected to DB');
-                var _db = db.db('care_tracker')
-                var search_result = true;
-                const search = await _db.collection("users").findOne({'phone_number' :decodedToken.phone_number}, async function(err, result) {
-                    if (err) throw err;
-                    console.log(result);
-                    if(!result){                        
-                        search_result = false;
-                        console.log ('sr in scope', search_result)
-                        var UserDetails = {
-                            user_name : "",
-                            phone_number : decodedToken.phone_number,
-                            user_email : "",
-                            user_type : "user",
-                            user_photo : "",
-                            user_status : "new",
-                            user_fb_uid : decodedToken.uid,
-                        };
-                        const insert = await _db.collection('users').insertOne(UserDetails);
-                        db.close();
-                        var response = {
-                            status : true,
-                            user_details : UserDetails
-                        }
-                        res.status(200);
-                        res.json(response);
-                    }else{
-                        var response = {
-                            status : true,
-                            user_details : result
-                        }
-                        res.status(200);
-                        res.json(response);
-                    }
-                });
-                
-            }else{
-                console.log('DB error', err)
-            }
-        });
-    })
-    .catch((error) => {
-        console.log('error', error.errorInfo)
-        var response = {
-            status : false
-        }
-        res.json(response);
-    });
-    // res.json(req.body);
-            
-})
 
-app.post('/updateAccountDetails', async function (req, res){
+exports.updateAccountDetails = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
      await validate_user(params.access_token).then(async (response)=>{
-        console.log('KAPIL',response)
-        if(response){        
+        if(response){      
+            console.log(response)  
             var uid = response.uid;
+            var phone_number = response.phone_number;
             var fileGettingUploaded = req.files.profile_photo;
             var file_url = await upload_file(fileGettingUploaded,'profile_photos' )
-            console.log('file_url', file_url)
+            // console.log('file_url', file_url)
             if(file_url){
                 MongoClient.connect(process.env.MONGO_URL,async function (err, db){
-                    if (!err) {
-                        console.log('Connected to DB');
+                    if (err) {
+                        console.log('DB error', err);
                     }
                     var _db = db.db('care_tracker')
                     const update = await _db.collection('users').updateOne({
-                        "user_fb_uid": uid
+                        "phone_number": phone_number
                     }, {
                         $set: {
                             user_name : req.body.user_name,
@@ -182,7 +78,7 @@ app.post('/updateAccountDetails', async function (req, res){
                             user_status : 'old'
                         }
                     });
-                    console.log('update',update)
+                    console.log('update',uid)
                     var response;
                     if (update.acknowledged) {
                         response = {'status': true}                        
@@ -212,14 +108,14 @@ app.post('/updateAccountDetails', async function (req, res){
         }
     })
 
-})
-
-app.post('/getUser_details', async function (req, res){
+}
+exports.getUser_details = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
      await validate_user(params.access_token).then(async (response)=>{
         console.log('KAPIL',response)
         if(response){        
             var uid = response.uid;
+            var phone_number = response.phone_number;
             
             MongoClient.connect(process.env.MONGO_URL,async function (err, db){
                 if (!err) {
@@ -227,7 +123,7 @@ app.post('/getUser_details', async function (req, res){
                 }
                 var _db = db.db('care_tracker')
                 var search_result;
-                const search = await _db.collection("users").findOne({user_fb_uid:uid})
+                const search = await _db.collection("users").findOne({phone_number:phone_number})
                 console.log('search result',search)
                 var response;
                 if (search) {
@@ -255,57 +151,9 @@ app.post('/getUser_details', async function (req, res){
         }
     })
 
-})
+}
 
-// app.get('/', async function (req, res) {
-//     user_details = {
-//         name : 'akshay'
-//     }
-//     var insert = await insert_data('test', user_details);
-//     console.log('insert resp',insert);
-//     res.send('Welcome to Care Tracker Backend CI/CD')
-// })
-app.post('/upload_test', async function(req, res) {
-    console.log ('request params', req.body)
-    var file = req.files.ocr_test
-    var file_path = req.files.ocr_test.tempFilePath
-    console.log ('request files', file_path)
-    const config = {
-        lang: "eng",
-        oem: 1,
-        psm: 3,
-      }
-      const img =  "https://res.cloudinary.com/n10eta/image/upload/v1637509081/sample_reports/16675-blood-test-report-marham-90_fumbut.jpg"
-      tesseract
-        .recognize(img, config)
-        .then(async (text) => {
-            text1 =await text.replace(/(\r\n|\n|\r)/gm, "\n");
-            var split = text1.split('\n')
-            var filtered = split.filter(function (el) {
-                return el != '' && el != ' ';
-              });
-              var str = 'name';
-              let  rbc =    filtered.filter(function (el) {
-                return el.indexOf( 'Total RBC Count' ) !== -1;;
-              }); //returns 1, because arr[1] == 'foo'
-              let  wbc =    filtered.filter(function (el) {
-                return el.indexOf( 'Total WBC Count' ) !== -1;;
-              }); //returns 1, because arr[1] == 'foo'
-            //   let x = Object.assign({}, filtered)
-            // var filteredAry = split.filter(function(e) { return e !== '\r' })
-            // var filteredAry = filteredAry.filter(function(e) { return e !== ' \r' })
-          console.log("Total Data:",text)
-          console.log("Filtered Data:",filtered)
-          console.log("rbc:",rbc)
-          console.log("wbc:",wbc)
-        })
-        .catch((error) => {
-          console.log(error.message)
-        })
-    res.json('hello')
-
-})
-app.post('/create_profile', async function(req, res) {
+exports.create_profile = async function (req, res) {
     var params = JSON.parse(JSON.stringify(req.body));
     console.log ('request params', req.body)
     console.log ('request files', req.files)
@@ -336,7 +184,8 @@ app.post('/create_profile', async function(req, res) {
                     name : params.name,
                     age : params.age,
                     blood_group : params.blood_group,
-                    gender : params.disease,
+                    disease : params.disease,
+                    gender : params.gender,
                     emergency_contact : params.emergency_contact,                    
                 }
                 //if (req.body.uuid_fb==null){}
@@ -421,18 +270,19 @@ app.post('/create_profile', async function(req, res) {
             console.log ("in else")
         }
     });
-})
+}
 
-app.post('/get_profile_list', async function(req, res) {
+exports.get_profile_list = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
      await validate_user(params.access_token).then(async (response)=>{
         if(response){        
             var uid = response.uid;
+            var phone_number = response.phone_number;
             
             MongoClient.connect(process.env.MONGO_URL, async function(err, db) {
                 if (err) throw err;                
                 var dbData = db.db('care_tracker')
-                const insert = await dbData.collection("profiles").find({user_fb_uid: uid})
+                const insert = await dbData.collection("profiles").find({userNumber: phone_number})
                     .toArray(function (err, result) {
                         if (err) throw err;
                         var resp = {
@@ -455,9 +305,9 @@ app.post('/get_profile_list', async function(req, res) {
             console.log ("in else")
         }
     });
-})
+}
 
-app.post('/delete_profile', async function(req, res) {
+exports.delete_profile = async function (req, res) {
     var params = JSON.parse(JSON.stringify(req.body));
     await validate_user(params.access_token).then(async (response)=>{
         if(response){        
@@ -499,9 +349,9 @@ app.post('/delete_profile', async function(req, res) {
             console.log ("in else")
         }
     })
-});
+}
 
-app.post('/get_emergency_details', async function(req, res) {    
+exports.get_emergency_details = async function (req, res){    
     var params = JSON.parse(JSON.stringify(req.body));
     var profile_id = params.pid;
     MongoClient.connect(process.env.MONGO_URL,async function (err, db){
@@ -516,25 +366,60 @@ app.post('/get_emergency_details', async function(req, res) {
             }
             
             );
-            console.log(details);
+            console.log('profile_id',profile_id);
             if (details) {
                 
                 var result = {'status': true,
-                                data : details}
+                                data : details
+                            }
                 res.status(200);
                 res.json(result);
             }else{
-                var result = {'status': false, message : " No details found"}
-                
+                var result = {'status': false, message : " No details found"}                
                 res.status(200);
                 res.json(result);
 
             }
     })
        
-});
-    
-module.exports = app;
+}
 
+exports.test_insert = async function (req, res){
+    var data = {
+        hello:'234'
+    }
+    var resp = await models.insert_data('test',data)
+    console.log('req',resp)
+}
 
-
+exports.test_ocr = async function (req, res){
+    const config = {
+        lang: "eng",
+        oem: 1,
+        psm: 3,
+      }
+    const img =  "https://res.cloudinary.com/n10eta/image/upload/v1637470970/sample_reports/0004_pipk2c.jpg"
+    tesseract
+      .recognize(img, config)
+      .then(async (text) => {
+          text1 =await text.replace(/(\r\n|\n|\r)/gm, "\n");
+          var split = text1.split('\n')
+          var filtered = split.filter(function (el) {
+              return el != '' && el != ' ';
+            });
+            var str = 'name';
+            let  rbc =    filtered.filter(function (el) {
+              return el.indexOf( 'Total RBC Count' ) !== -1;;
+            }); //returns 1, because arr[1] == 'foo'
+            let  wbc =    filtered.filter(function (el) {
+              return el.indexOf( 'Total WBC Count' ) !== -1;;
+            }); //returns 1, because arr[1] == 'foo'
+          //   let x = Object.assign({}, filtered)
+          // var filteredAry = split.filter(function(e) { return e !== '\r' })
+          // var filteredAry = filteredAry.filter(function(e) { return e !== ' \r' })
+        console.log("Total Data:",text)
+        console.log("Filtered Data:",filtered)
+        console.log("rbc:",rbc)
+        console.log("wbc:",wbc)
+      })
+}
