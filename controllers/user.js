@@ -1,8 +1,5 @@
 require('dotenv').config()
 var unlink  =  require('fs').unlink;
-// var express = require('express');
-// var multer = require('multer');
-// var cors = require("cors");
 
 var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
