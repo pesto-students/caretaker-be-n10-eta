@@ -271,6 +271,7 @@ exports.create_profile = async function (req, res) {
 
 exports.get_profile_list = async function (req, res){
     console.log('get_profile_list called')
+    console.log ('process.env.MONGO_URL',process.env.MONGO_URL)
     var params = JSON.parse(JSON.stringify(req.body));
      await validate_user(params.access_token).then(async (response)=>{
         if(response){        
