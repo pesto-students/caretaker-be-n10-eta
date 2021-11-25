@@ -1,38 +1,19 @@
 require('dotenv').config()
-var unlink  =  require('fs').unlink;
-// var express = require('express');
-// var multer = require('multer');
-// var cors = require("cors");
 
 var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
 var admin = require("firebase-admin");
 var cloudinary = require('cloudinary');
+
 cloudinary.config({ 
     cloud_name: 'n10eta', 
     api_key: '153456775719431', 
     api_secret: 'YM_yp58wr59ojC76EL4uLn3omtA',
     secure: true
   });
-var QRCode = require('qrcode')
-const tesseract = require("node-tesseract-ocr")
 
 var models = require('../models/models')
 
-async function validate_user (access_token){
-    var resp;
-    await admin.auth()
-    .verifyIdToken(access_token)
-    .then((decodedToken) => {
-        resp = decodedToken
-    })
-    .catch((error) => {
-        console.log(error)     
-        console.log("authentication failed in validate user")     
-        resp =  false;
-    });
-    return resp;
-}
 async function upload_file (file, folder_name){
     var file_url;
     await cloudinary.uploader.upload(file.tempFilePath,  function(error, result) { file_url = error.url}, {
