@@ -472,3 +472,36 @@ exports.test_ocr = async function (req, res){
     //     // console.log("text1:",split)
     //   })
 }
+    // const config = {
+    //     lang: "eng",
+    //     oem: 1,
+    //     psm: 3,
+    //   }
+    // const img =  "https://res.cloudinary.com/n10eta/image/upload/v1637470970/sample_reports/0004_pipk2c.jpg"
+    // tesseract
+    //   .recognize(img, config)
+    //   .then(async (text) => {
+    //       text1 =await text.replace(/(\r\n|\n|\r)/gm, "\n");
+    //       var split = text1.split('\n')
+    //       var filtered = split.filter(function (el) {
+    //           return el != '' && el != ' ';
+    //         });
+    //         var str = 'name';
+    //         let  rbc =    filtered.filter(function (el) {
+    //           return el.indexOf( 'Total RBC Count' ) !== -1;;
+    //         }); //returns 1, because arr[1] == 'foo'
+    //         let  wbc =    filtered.filter(function (el) {
+    //           return el.indexOf( 'Total WBC Count' ) !== -1;;
+    //         }); //returns 1, because arr[1] == 'foo'
+    //       //   let x = Object.assign({}, filtered)
+    //       // var filteredAry = split.filter(function(e) { return e !== '\r' })
+    //       // var filteredAry = filteredAry.filter(function(e) { return e !== ' \r' })
+    //     console.log("Total Data:",text)
+    //     console.log("Filtered Data:",filtered)
+    //     console.log("rbc:",rbc)
+    //     console.log("wbc:",wbc)
+    //   })
+// }
+
+
+
