@@ -1,17 +1,23 @@
 require('dotenv').config()
 var unlink  =  require('fs').unlink;
-
+const fs = require('fs').promises;
 var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
 var admin = require("firebase-admin");
 var cloudinary = require('cloudinary');
+var QRCode = require('qrcode')
+const { RekognitionClient, CompareFacesCommand, DetectTextCommand } = require("@aws-sdk/client-rekognition");
+
+var aws = require("aws-sdk");
+var atob = require('atob');
+// aws.config.loadFromPath('./awscreadentials.json');
+// console.log('aws',aws.config)
 cloudinary.config({ 
     cloud_name: 'n10eta', 
     api_key: '153456775719431', 
     api_secret: 'YM_yp58wr59ojC76EL4uLn3omtA',
     secure: true
   });
-var QRCode = require('qrcode')
 // const tesseract = require("node-tesseract-ocr")
 
 var models = require('../models/models')
@@ -390,33 +396,79 @@ exports.test_insert = async function (req, res){
     var resp = await models.insert_data('test',data)
     console.log('req',resp)
 }
-
-// exports.test_ocr = async function (req, res){
-//     const config = {
-//         lang: "eng",
-//         oem: 1,
-//         psm: 3,
-//       }
-//     const img =  "https://res.cloudinary.com/n10eta/image/upload/v1637470970/sample_reports/0002_qero1o.jpg"
-//     tesseract
-//       .recognize(img, config)
-//       .then(async (text) => {
-//           text1 =await text.replace(/(\r\n|\n|\r)/gm, "\n");
-//           var split = text1.split('\n')
-//           var filtered = split.filter(function (el) {
-//               return el != '' && el != ' ';
-//             });
-//             var str = 'name';
-//             let  rbc =    filtered.filter(function (el) {
-//               return el.indexOf( 'Total RBC Count' ) !== -1;;
-//             }); //returns 1, because arr[1] == 'foo'
-//             let  wbc =    filtered.filter(function (el) {
-//               return el.indexOf( 'Total WBC Count' ) !== -1;;
-//             }); 
-//         // console.log("Total Data:",text)
-//         console.log("Filtered Data:",filtered)
-//         // console.log("rbc:",rbc)
-//         // console.log("wbc:",wbc)
-//         // console.log("text1:",split)
-//       })
-// }
+function getBinary(base64Image) {
+    var binaryImg = atob(base64Image);
+    var length = binaryImg.length;
+    var ab = new ArrayBuffer(length);
+    var ua = new Uint8Array(ab);
+    for (var i = 0; i < length; i++) {
+      ua[i] = binaryImg.charCodeAt(i);
+    }
+  
+    return ab;
+  }
+exports.test_ocr = async function (req, res){
+    console.log('Test OCR called')
+    // s3 = new aws.S3({apiVersion: '2006-03-01'});
+    // s3.listBuckets(function(err, data) {
+    //     if (err) {
+    //       console.log("Error", err);
+    //     } else {
+    //       console.log("Success", data.Buckets);
+    //     }
+    //   });
+    const client = new RekognitionClient({ region: "ap-south-1", AWS_ACCESS_KEY_ID: "AKIAWXVGZI3AFSPGLDEJ", AWS_SECRET_ACCESS_KEY: "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" });
+    const base64Image = await fs.readFile(req.files.file.tempFilePath, {encoding: 'base64'});
+    // var base64Image = getBinary(base64Image);
+    var imageBytes = getBinary(base64Image);
+    // const contents = await fs.readFile(req.files.file.tempFilePath);
+    // var buf = new Buffer(bitmap).toString('base64');
+    const params = {
+        Image : {
+            S3Object: {
+                Bucket:'caretrackerreports',
+                Name : '0002_qero1o.jpg'
+            }
+        }
+    };
+    // var image =  {Bytes:contents}
+    console.log(params)
+    // // const command = new CompareFacesCommand(params);
+    const command = new DetectTextCommand(params);
+    const response = await client.send(command);
+    console.log(typeof response.TextDetections)
+    var aryy = response.TextDetections.entries;
+    var aryy = Object.entries(aryy);
+    var filtered = aryy.filter(function (el) {
+                  return el == 'Platelet' ;
+                });
+    // res.json(response.TextDetections)
+    res.json(filtered)
+    // const config = {
+    //     lang: "eng",
+    //     oem: 1,
+    //     psm: 3,
+    //   }
+    // const img =  "https://res.cloudinary.com/n10eta/image/upload/v1637470970/sample_reports/0002_qero1o.jpg"
+    // tesseract
+    //   .recognize(img, config)
+    //   .then(async (text) => {
+    //       text1 =await text.replace(/(\r\n|\n|\r)/gm, "\n");
+    //       var split = text1.split('\n')
+    //       var filtered = split.filter(function (el) {
+    //           return el != '' && el != ' ';
+    //         });
+    //         var str = 'name';
+    //         let  rbc =    filtered.filter(function (el) {
+    //           return el.indexOf( 'Total RBC Count' ) !== -1;;
+    //         }); //returns 1, because arr[1] == 'foo'
+    //         let  wbc =    filtered.filter(function (el) {
+    //           return el.indexOf( 'Total WBC Count' ) !== -1;;
+    //         }); 
+    //     // console.log("Total Data:",text)
+    //     console.log("Filtered Data:",filtered)
+    //     // console.log("rbc:",rbc)
+    //     // console.log("wbc:",wbc)
+    //     // console.log("text1:",split)
+    //   })
+}
