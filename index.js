@@ -1,6 +1,7 @@
 require('dotenv').config()
 var loginRouter = require('./routes/login');
 var userRouter = require('./routes/user');
+var doctorRouter = require('./routes/doctor')
 // const app = require('./api/index');
 var express = require('express');
 var fileUpload = require('express-fileupload');
@@ -19,6 +20,7 @@ app.use(fileUpload({
 }));
 app.use('/', loginRouter);
 app.use('/', userRouter);
+app.use('/',doctorRouter)
 var server = app.listen(process.env.PORT || 8081, function () {
     var host = server.address().address
     var port = server.address().port    

@@ -9,8 +9,8 @@ exports.insert_data =  async function (collection_name, data){
     // console.log(db, 'asasas');
     const insert = await db.collection(collection_name).insertOne(data);
     console.log('insert', insert);
-    if (insert.acknowledged) {
-        response = insert.insertedId;
+    if (insert.acknowledged) { 
+        response = insert.insertedId; 
         console.log('insert', response);
     } else {
         response = false;

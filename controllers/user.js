@@ -423,3 +423,6 @@ exports.test_ocr = async function (req, res){
         console.log("wbc:",wbc)
       })
 }
+
+
+
