@@ -7,19 +7,8 @@ var admin = require("firebase-admin");
 var cloudinary = require('cloudinary');
 var QRCode = require('qrcode')
 const { RekognitionClient, CompareFacesCommand, DetectTextCommand } = require("@aws-sdk/client-rekognition");
-
 var aws = require("aws-sdk");
-var atob = require('atob');
-// aws.config.loadFromPath('./awscreadentials.json');
-// console.log('aws',aws.config)
-cloudinary.config({ 
-    cloud_name: 'n10eta', 
-    api_key: '153456775719431', 
-    api_secret: 'YM_yp58wr59ojC76EL4uLn3omtA',
-    secure: true
-  });
-// const tesseract = require("node-tesseract-ocr")
-
+cloudinary.config(process.env.CLOUDINARY_CONFIG);
 var models = require('../models/models')
 
 async function validate_user (access_token){
@@ -36,6 +25,7 @@ async function validate_user (access_token){
     });
     return resp;
 }
+
 async function upload_file (file, folder_name){
     var file_url;
     await cloudinary.uploader.upload(file.tempFilePath,  function(error, result) { file_url = error.url}, {
@@ -45,6 +35,7 @@ async function upload_file (file, folder_name){
         });
     return file_url;
 }
+
 async function upload_local_file (file, folder_name){
     var file_url;
     await cloudinary.uploader.upload(file,  function(error, result) { file_url = error.url}, {
@@ -105,21 +96,21 @@ exports.updateAccountDetails = async function (req, res){
                 status : false,
                 message: 'Unauthorized access'
             }
-            res.status(403);
+            res.status(401);
             res.json(resp);
             console.log ("in else")
         }
     })
 
 }
+
 exports.getUser_details = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
      await validate_user(params.access_token).then(async (response)=>{
         console.log('KAPIL',response)
         if(response){        
             var uid = response.uid;
-            var phone_number = response.phone_number;
-            
+            var phone_number = response.phone_number;            
             MongoClient.connect(process.env.MONGO_URL,async function (err, db){
                 if (!err) {
                     console.log('Connected to DB');
@@ -148,12 +139,11 @@ exports.getUser_details = async function (req, res){
                 status : false,
                 message: 'Unauthorized access'
             }
-            res.status(403);
+            res.status(401);
             res.json(resp);
             console.log ("in else")
         }
     })
-
 }
 
 exports.create_profile = async function (req, res) {
@@ -169,14 +159,13 @@ exports.create_profile = async function (req, res) {
               if (req.files && Object.keys(req.files).length != 0) {
                 if (req.files.reports && Object.keys(req.files.reports).length != 0)
                 {
-
                     console.log(Object.keys(req.files.reports).length, 'reports length')
                     console.log(req.files.reports)
-                  for (let index = 0; index < Object.keys(req.files.reports).length; index++) {
+                    for (let index = 0; index < Object.keys(req.files.reports).length; index++) {
                       const file = req.files.reports[index];
                       var file_url = await upload_file(file,'reports')
                       reports.push(file_url);                    
-                  }
+                    }
                 }
             }
             
@@ -206,9 +195,6 @@ exports.create_profile = async function (req, res) {
                     if (result.acknowledged) {
                         let insertId = ObjectId(result.insertedId).toString();
                         let filepath = '/tmp/'+insertId+'.png';
-                        // QRCode.toDataURL('https://caretracker.netlify.app/emerygencydetails?pid='+insertId, function (err, url) {
-                        //     console.log(url)
-                        //   })
                         QRCode.toFile(filepath, 'https://caretracker.netlify.app/emerygencydetails?pid='+insertId, {
                             color: {
                               dark: '#00F',  // Blue dots
@@ -217,11 +203,9 @@ exports.create_profile = async function (req, res) {
                           }, async function (err) {
                             if (err){
                                 console.log(err)                                 
-                            } 
-                        
+                            }                         
                             console.log('QR code generated')
                             var qrlink = await upload_local_file(filepath,'qrcodes') 
-                            // console.log (qrlink)
                             MongoClient.connect(process.env.MONGO_URL,async function (err, db){
                                 var _db = db.db('care_tracker')
                                 var ObjectId = require('mongodb').ObjectID;
@@ -258,7 +242,6 @@ exports.create_profile = async function (req, res) {
                             status : false
                         }
                         res.json(resp);
-
                     }
                     db.close();
                 });
@@ -268,7 +251,7 @@ exports.create_profile = async function (req, res) {
                 status : false,
                 message: 'Unauthorized access'
             }
-            res.status(403);
+            res.status(401);
             res.json(resp);
             console.log ("in else")
         }
@@ -282,8 +265,7 @@ exports.get_profile_list = async function (req, res){
      await validate_user(params.access_token).then(async (response)=>{
         if(response){        
             var uid = response.uid;
-            var phone_number = response.phone_number;
-            
+            var phone_number = response.phone_number;            
             MongoClient.connect(process.env.MONGO_URL, async function(err, db) {
                 if (err) throw err;                
                 var dbData = db.db('care_tracker')
@@ -297,15 +279,14 @@ exports.get_profile_list = async function (req, res){
                         res.status(200);
                         res.json(resp);
                         // res.json(result);
-                    });
-               
+                    });               
             });
         }else{            
             var resp = {
                 status : false,
                 message: 'Unauthorized access'
             }
-            res.status(403);
+            res.status(401);
             res.json(resp);
             console.log ("in else")
         }
@@ -327,21 +308,17 @@ exports.delete_profile = async function (req, res) {
                 const deleteP = await _db.collection('profiles').deleteOne(
                     {
                         "_id": ObjectId(profile_id)
-                    }
-                    
+                    }                    
                     );
                     console.log(deleteP);
-                    if (deleteP.deletedCount) {
-                        
+                    if (deleteP.deletedCount) {                        
                         var result = {'status': true}
                         res.status(200);
                         res.json(result);
                     }else{
-                        var result = {'status': false, message : " Unable to delete"}
-                        
+                        var result = {'status': false, message : " Unable to delete"}                        
                         res.status(200);
                         res.json(result);
-
                     }
             })
         }else{            
@@ -349,7 +326,7 @@ exports.delete_profile = async function (req, res) {
                 status : false,
                 message: 'Unauthorized access'
             }
-            res.status(403);
+            res.status(401);
             res.json(resp);
             console.log ("in else")
         }
@@ -396,17 +373,7 @@ exports.test_insert = async function (req, res){
     var resp = await models.insert_data('test',data)
     console.log('req',resp)
 }
-function getBinary(base64Image) {
-    var binaryImg = atob(base64Image);
-    var length = binaryImg.length;
-    var ab = new ArrayBuffer(length);
-    var ua = new Uint8Array(ab);
-    for (var i = 0; i < length; i++) {
-      ua[i] = binaryImg.charCodeAt(i);
-    }
-  
-    return ab;
-  }
+
 exports.test_ocr = async function (req, res){
     console.log('Test OCR called')
     // s3 = new aws.S3({apiVersion: '2006-03-01'});
@@ -417,12 +384,9 @@ exports.test_ocr = async function (req, res){
     //       console.log("Success", data.Buckets);
     //     }
     //   });
-    const client = new RekognitionClient({ region: "ap-south-1", AWS_ACCESS_KEY_ID: "AKIAWXVGZI3AFSPGLDEJ", AWS_SECRET_ACCESS_KEY: "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" });
+    const client = new RekognitionClient({ region: "ap-south-1"});
     const base64Image = await fs.readFile(req.files.file.tempFilePath, {encoding: 'base64'});
-    // var base64Image = getBinary(base64Image);
-    var imageBytes = getBinary(base64Image);
-    // const contents = await fs.readFile(req.files.file.tempFilePath);
-    // var buf = new Buffer(bitmap).toString('base64');
+    // var imageBytes = getBinary(base64Image);
     const params = {
         Image : {
             S3Object: {
@@ -431,77 +395,37 @@ exports.test_ocr = async function (req, res){
             }
         }
     };
-    // var image =  {Bytes:contents}
-    console.log(params)
-    // // const command = new CompareFacesCommand(params);
     const command = new DetectTextCommand(params);
     const response = await client.send(command);
-    console.log(typeof response.TextDetections)
-    var aryy = response.TextDetections.entries;
-    var aryy = Object.entries(aryy);
-    var filtered = aryy.filter(function (el) {
-                  return el == 'Platelet' ;
-                });
-    // res.json(response.TextDetections)
-    res.json(filtered)
-    // const config = {
-    //     lang: "eng",
-    //     oem: 1,
-    //     psm: 3,
-    //   }
-    // const img =  "https://res.cloudinary.com/n10eta/image/upload/v1637470970/sample_reports/0002_qero1o.jpg"
-    // tesseract
-    //   .recognize(img, config)
-    //   .then(async (text) => {
-    //       text1 =await text.replace(/(\r\n|\n|\r)/gm, "\n");
-    //       var split = text1.split('\n')
-    //       var filtered = split.filter(function (el) {
-    //           return el != '' && el != ' ';
-    //         });
-    //         var str = 'name';
-    //         let  rbc =    filtered.filter(function (el) {
-    //           return el.indexOf( 'Total RBC Count' ) !== -1;;
-    //         }); //returns 1, because arr[1] == 'foo'
-    //         let  wbc =    filtered.filter(function (el) {
-    //           return el.indexOf( 'Total WBC Count' ) !== -1;;
-    //         }); 
-    //     // console.log("Total Data:",text)
-    //     console.log("Filtered Data:",filtered)
-    //     // console.log("rbc:",rbc)
-    //     // console.log("wbc:",wbc)
-    //     // console.log("text1:",split)
-    //   })
+    var size  = Object.keys(response.TextDetections).length;
+    var Haemoglobin, rbc,wbc;
+    for (var key of Object.keys(response.TextDetections)) {
+        var text = response.TextDetections[key].DetectedText;
+        var type = response.TextDetections[key].Type;
+        if(text == "Haemoglobin" && type == "LINE"){
+            console.log( response.TextDetections[key].DetectedText )
+            nextIndex =parseInt(key) +1
+            Haemoglobin = response.TextDetections[nextIndex].DetectedText
+            console.log( Haemoglobin )
+        }
+        if(text == "Total RBC Count" && type == "LINE"){
+            console.log( response.TextDetections[key].DetectedText )
+            nextIndex =parseInt(key) +1
+            rbc = response.TextDetections[nextIndex].DetectedText
+            console.log( rbc )
+        }
+    }
+    // console.log(response)
+    res.json(response.TextDetections)
+    // res.json(filtered)
+    // console.log(typeof response.TextDetections)
+    // var aryy = response.TextDetections.entries;
+    // var aryy = Object.entries(aryy);
+    // var filtered = aryy.filter(function (el) {
+    //               return el == 'Platelet' ;
+    //             });
+
 }
-    // const config = {
-    //     lang: "eng",
-    //     oem: 1,
-    //     psm: 3,
-    //   }
-    // const img =  "https://res.cloudinary.com/n10eta/image/upload/v1637470970/sample_reports/0004_pipk2c.jpg"
-    // tesseract
-    //   .recognize(img, config)
-    //   .then(async (text) => {
-    //       text1 =await text.replace(/(\r\n|\n|\r)/gm, "\n");
-    //       var split = text1.split('\n')
-    //       var filtered = split.filter(function (el) {
-    //           return el != '' && el != ' ';
-    //         });
-    //         var str = 'name';
-    //         let  rbc =    filtered.filter(function (el) {
-    //           return el.indexOf( 'Total RBC Count' ) !== -1;;
-    //         }); //returns 1, because arr[1] == 'foo'
-    //         let  wbc =    filtered.filter(function (el) {
-    //           return el.indexOf( 'Total WBC Count' ) !== -1;;
-    //         }); //returns 1, because arr[1] == 'foo'
-    //       //   let x = Object.assign({}, filtered)
-    //       // var filteredAry = split.filter(function(e) { return e !== '\r' })
-    //       // var filteredAry = filteredAry.filter(function(e) { return e !== ' \r' })
-    //     console.log("Total Data:",text)
-    //     console.log("Filtered Data:",filtered)
-    //     console.log("rbc:",rbc)
-    //     console.log("wbc:",wbc)
-    //   })
-// }
 
 
 
