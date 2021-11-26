@@ -17,3 +17,5 @@ exports.insert_data =  async function (collection_name, data){
     }
     return response
 }
+
+
