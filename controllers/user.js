@@ -141,7 +141,7 @@ exports.updateAccountDetails = async function (req, res){
                     }, {
                         $set: {
                             user_name : req.body.user_name,
-                            user_email : req.body.user_email,
+                            user_email : req.body.user_email, 
                             user_photo : file_url,
                             user_status : 'old'
                         }
