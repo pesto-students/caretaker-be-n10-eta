@@ -25,10 +25,10 @@ async function upload_file (file, folder_name){
 }
 
 exports.doctorAdd = async function (req, res){
-
+    const {phone_number,user_name,doctor_expertise,doctor_experience,doctor_fees } =req.body
     var fileGettingUploaded = req.files.doctorProfilePhoto;
     var doctorProPhoto = ""
-    if (req.files.doctorProfilePhoto && req.body.phone_number &&  req.body.doctor_expertise){
+    if (req.files.doctorProfilePhoto && phone_number &&  doctor_expertise){
         doctorProPhoto = await upload_file(fileGettingUploaded,'doctor_profile_photos' )
         console.log('fileData', doctorProPhoto)
     
@@ -37,7 +37,7 @@ exports.doctorAdd = async function (req, res){
                 console.log('Connected to DB',err);
             }
             var _db = db.db('care_tracker')
-            var searchNumber =await _db.collection("users").findOne({'phone_number' :req.body.phone_number}, async function(err, result) {
+            var searchNumber =await _db.collection("users").findOne({'phone_number' :phone_number}, async function(err, result) {
             if (err) throw err;
             console.log(result);
             if(result){ 
@@ -45,12 +45,12 @@ exports.doctorAdd = async function (req, res){
                 res.json(response);
              }else{
                 await _db.collection('users').insertOne({
-                    user_name :req.body.user_name,
-                    phone_number : req.body.phone_number,
+                    user_name :user_name,
+                    phone_number : phone_number,
                     user_type : "doctor",
-                    doctor_experience : req.body.doctor_experience,
-                    dpctor_expertise : req.body.doctor_expertise,
-                    doctor_fees : req.body.doctor_fees,
+                    doctor_experience : doctor_experience,
+                    doctor_expertise : doctor_expertise,
+                    doctor_fees : doctor_fees,
                     doctorProfilePhoto:doctorProPhoto
                 })
                 var response = {'status': true, message : "Add Doctor successfully"}
