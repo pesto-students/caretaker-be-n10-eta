@@ -15,15 +15,16 @@ cloudinary.config({
 var models = require('../models/models')
 
 
-
+ 
 exports.addReqDisease = async function (req, res){
-    if (req.body.reqDisease){
+   const {reqDisease,userName}= req.body
+    if (reqDisease){
         MongoClient.connect(process.env.MONGO_URL,async function (err, db){
             if (!err) {
                 console.log('Connected to DB',err);
             }
             var _db = db.db('care_tracker')
-            var searchNumber =await _db.collection("disease").findOne({'disease' :req.body.reqDisease}, async function(err, result) {
+            var searchNumber =await _db.collection("disease").findOne({'disease' :reqDisease}, async function(err, result) {
             if (err) throw err;
             console.log(result);
             if(result){ 
@@ -31,8 +32,8 @@ exports.addReqDisease = async function (req, res){
                 res.json(response);
             }else{
                 await _db.collection('reqDisease').insertOne({
-                    reqDisease :req.body.reqDisease,
-                    userName : req.body.userName
+                    reqDisease :reqDisease,
+                    userName : userName
                 })
                 var response = {'status': true, message : "Add Disease successfully"}
                 res.json(response);
