@@ -1,12 +1,15 @@
 require('dotenv').config()
 var unlink  =  require('fs').unlink;
 const fs = require('fs').promises;
+const fs1 = require('fs');
+const util = require('util');
 var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
 var admin = require("firebase-admin");
 var cloudinary = require('cloudinary');
 var QRCode = require('qrcode')
 const { RekognitionClient, CompareFacesCommand, DetectTextCommand } = require("@aws-sdk/client-rekognition");
+const { v1: uuidv1,v4: uuidv4} = require('uuid');
 var aws = require("aws-sdk");
 cloudinary.config(process.env.CLOUDINARY_CONFIG);
 var models = require('../models/models')
@@ -44,6 +47,77 @@ async function upload_local_file (file, folder_name){
         unique_filename : true,
         });
     return file_url;
+}
+
+async function analyze_report (file){
+    var image;
+    console.log('analyze_report called')
+    var xyz = await fs.readFile(file.tempFilePath, async function (err, data) {    
+        image = uuidv4()+file.name
+        s3 = new aws.S3({apiVersion: '2006-03-01'});
+        var params123 = {Bucket: 'caretrackerreports', Key: image, Body: data};
+        console.log('before upload');
+        await s3.upload(params123,async function(err, data1) {
+            console.log('inside upload');
+            const client = new RekognitionClient({ region: "ap-south-1"});
+            const params = {
+                Image : {
+                    S3Object: {
+                        Bucket:'caretrackerreports',
+                        Name : image
+                    }
+                }
+            };
+            const command = new DetectTextCommand(params);
+            const response = await client.send(command);
+            var size  = Object.keys(response.TextDetections).length;
+            var Haemoglobin, rbc,wbc,data = "";
+            for (var key of Object.keys(response.TextDetections)) {
+                var text = response.TextDetections[key].DetectedText;
+                var type = response.TextDetections[key].Type;
+                if(text == "Haemoglobin" && type == "LINE"){
+                    console.log( response.TextDetections[key].DetectedText )
+                    nextIndex =parseInt(key) +1
+                    Haemoglobin = response.TextDetections[nextIndex].DetectedText
+                    console.log( Haemoglobin )
+                }
+                if(text == "Total RBC Count" && type == "LINE"){
+                    console.log( response.TextDetections[key].DetectedText )
+                    nextIndex =parseInt(key) +1
+                    rbc = response.TextDetections[nextIndex].DetectedText
+                    console.log( rbc )
+                }
+                if(text == "Total WBC Count" && type == "LINE"){
+                    console.log( response.TextDetections[key].DetectedText )
+                    nextIndex =parseInt(key) +1
+                    wbc = response.TextDetections[nextIndex].DetectedText
+                    console.log( wbc )
+                }
+                data = {
+                    Haemoglobin:Haemoglobin,
+                    RBC:rbc,
+                    WBC:wbc,
+                }
+            }
+            console.log ('data', data)
+            console.log ('ready to send resp')
+            return '123'
+            // var resp = await models.insert_data('report_analysis',data)
+            // console.log('req',resp)
+            // console.log(response)
+            // res.json(response.TextDetections)
+        });
+    })
+    console.log('xyz',xyz);
+    
+    s3 = new aws.S3({apiVersion: '2006-03-01'});
+    var params123 = {Bucket: 'caretrackerreports', Key: image, Body: xyz};
+    console.log('before upload');
+    await s3.upload(params123,async function(err, data1) {
+        console.log('inside upload',data1);
+        const client = new RekognitionClient({ region: "ap-south-1"});
+    })
+    return '321'
 }
 
 exports.updateAccountDetails = async function (req, res){
@@ -161,9 +235,12 @@ exports.create_profile = async function (req, res) {
                 {
                     console.log(Object.keys(req.files.reports).length, 'reports length')
                     console.log(req.files.reports)
-                    for (let index = 0; index < Object.keys(req.files.reports).length; index++) {
+                    // (var index of Object.keys(req.files.reports)
+                    for(var index of Object.keys(req.files.reports)) {
                       const file = req.files.reports[index];
                       var file_url = await upload_file(file,'reports')
+                    //   var report = await analyze_report(file);
+                        // console.log('report123', report);
                       reports.push(file_url);                    
                     }
                 }
@@ -375,55 +452,62 @@ exports.test_insert = async function (req, res){
 }
 
 exports.test_ocr = async function (req, res){
-    console.log('Test OCR called')
-    // s3 = new aws.S3({apiVersion: '2006-03-01'});
-    // s3.listBuckets(function(err, data) {
-    //     if (err) {
-    //       console.log("Error", err);
-    //     } else {
-    //       console.log("Success", data.Buckets);
-    //     }
-    //   });
-    const client = new RekognitionClient({ region: "ap-south-1"});
-    const base64Image = await fs.readFile(req.files.file.tempFilePath, {encoding: 'base64'});
-    // var imageBytes = getBinary(base64Image);
-    const params = {
-        Image : {
-            S3Object: {
-                Bucket:'caretrackerreports',
-                Name : '0002_qero1o.jpg'
+    const { body, files } = req 
+    var image;
+    await fs1.readFile(req.files.file.tempFilePath, async function (err, data) {    
+        image = uuidv4()+req.files.file.name
+        s3 = new aws.S3({apiVersion: '2006-03-01'});
+        var params123 = {Bucket: 'caretrackerreports', Key: image, Body: data};
+        s3.upload(params123,async function(err, data1) {
+            console.log(err, data1);
+            
+            console.log(image);
+            const client = new RekognitionClient({ region: "ap-south-1"});
+            const params = {
+                Image : {
+                    S3Object: {
+                        Bucket:'caretrackerreports',
+                        Name : image
+                    }
+                }
+            };
+            const command = new DetectTextCommand(params);
+            const response = await client.send(command);
+            var size  = Object.keys(response.TextDetections).length;
+            var Haemoglobin, rbc,wbc;
+            for (var key of Object.keys(response.TextDetections)) {
+                var text = response.TextDetections[key].DetectedText;
+                var type = response.TextDetections[key].Type;
+                if(text == "Haemoglobin" && type == "LINE"){
+                    console.log( response.TextDetections[key].DetectedText )
+                    nextIndex =parseInt(key) +1
+                    Haemoglobin = response.TextDetections[nextIndex].DetectedText
+                    console.log( Haemoglobin )
+                }
+                if(text == "Total RBC Count" && type == "LINE"){
+                    console.log( response.TextDetections[key].DetectedText )
+                    nextIndex =parseInt(key) +1
+                    rbc = response.TextDetections[nextIndex].DetectedText
+                    console.log( rbc )
+                }
+                if(text == "Total WBC Count" && type == "LINE"){
+                    console.log( response.TextDetections[key].DetectedText )
+                    nextIndex =parseInt(key) +1
+                    wbc = response.TextDetections[nextIndex].DetectedText
+                    console.log( wbc )
+                }
+                var data = {
+                    Haemoglobin:Haemoglobin,
+                    RBC:rbc,
+                    WBC:wbc,
+                }
             }
-        }
-    };
-    const command = new DetectTextCommand(params);
-    const response = await client.send(command);
-    var size  = Object.keys(response.TextDetections).length;
-    var Haemoglobin, rbc,wbc;
-    for (var key of Object.keys(response.TextDetections)) {
-        var text = response.TextDetections[key].DetectedText;
-        var type = response.TextDetections[key].Type;
-        if(text == "Haemoglobin" && type == "LINE"){
-            console.log( response.TextDetections[key].DetectedText )
-            nextIndex =parseInt(key) +1
-            Haemoglobin = response.TextDetections[nextIndex].DetectedText
-            console.log( Haemoglobin )
-        }
-        if(text == "Total RBC Count" && type == "LINE"){
-            console.log( response.TextDetections[key].DetectedText )
-            nextIndex =parseInt(key) +1
-            rbc = response.TextDetections[nextIndex].DetectedText
-            console.log( rbc )
-        }
-    }
-    // console.log(response)
-    res.json(response.TextDetections)
-    // res.json(filtered)
-    // console.log(typeof response.TextDetections)
-    // var aryy = response.TextDetections.entries;
-    // var aryy = Object.entries(aryy);
-    // var filtered = aryy.filter(function (el) {
-    //               return el == 'Platelet' ;
-    //             });
+            var resp = await models.insert_data('report_analysis',data)
+            console.log('req',resp)
+            // console.log(response)
+            // res.json(response.TextDetections)
+        });
+    })
 
 }
 
