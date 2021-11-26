@@ -3,6 +3,8 @@ var loginRouter = require('./routes/login');
 var userRouter = require('./routes/user');
 var doctorRouter = require('./routes/doctor');
 var diseaseRouter = require('./routes/disease');
+var reqDiseaseRouter = require('./routes/reqDisease');
+
 // const app = require('./api/index');
 var express = require('express');
 var fileUpload = require('express-fileupload');
@@ -23,6 +25,7 @@ app.use('/', loginRouter);
 app.use('/', userRouter);
 app.use('/',doctorRouter);
 app.use('/',diseaseRouter);
+app.user('/',reqDiseaseRouter)
 var server = app.listen(process.env.PORT || 8081, function () {
     var host = server.address().address
     var port = server.address().port    
