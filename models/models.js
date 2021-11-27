@@ -17,5 +17,41 @@ exports.insert_data =  async function (collection_name, data){
     }
     return response
 }
+exports.update_data_push =  async function (collection_name, where , data, operation){
+    var response;
+    var _db
+    var dbcon = await MongoClient.connect(process.env.MONGO_URL);
+    var db = dbcon.db('care_tracker')
+    // console.log(db, 'asasas');
+    const update = await db.collection(collection_name).updateOne(where, {
+        $push: data
+    });
+    console.log('update', update);
+    if (update.acknowledged) { 
+        response =true; 
+    } else {
+        response = false;
+    }
+    return response
+}
+exports.get_field =  async function (collection_name, where , project,){
+    console.log('where', where);
+    var response;
+    var _db
+    var dbcon = await MongoClient.connect(process.env.MONGO_URL);
+    var db = dbcon.db('care_tracker')
+    // console.log(db, 'asasas');
+    const find = await db.collection(collection_name)
+    .find(where)
+    .project(project)
+    .toArray();
+    // console.log('find', find);
+    // if (find.acknowledged) { 
+    //     response =true; 
+    // } else {
+    //     response = false;
+    // }
+    return find
+}
 
 

@@ -227,9 +227,11 @@ exports.create_profile = async function (req, res) {
                       var file_url = await upload_file(file,'reports')
                       var analyze_report_resp = await analyze_report(file);
                         console.log('report123', analyze_report_resp);
+                        var datetime = new Date();
                         var temp = {
                             file_url : file_url,
-                            OCR : analyze_report_resp
+                            OCR : analyze_report_resp,
+                            uploaded_at : datetime
                         }
                       reports.push(temp);                    
                     //   reports_ocr.push(analyze_report_resp);                    
@@ -506,7 +508,7 @@ exports.upload_report = async function (req, res){
     const { body , files} = req;
     console.log(body.pid)
     await validate_user(body.access_token).then(async (response)=>{
-        if(response){    
+        if(!response){    
             var uid = response.uid;
             var phone_number = response.phone_number;       
             var reports = [];      
@@ -519,25 +521,82 @@ exports.upload_report = async function (req, res){
                   var file_url = await upload_file(file,'reports')
                   var analyze_report_resp = await analyze_report(file);
                     console.log('report123', analyze_report_resp);
+                    var datetime = new Date();
                     var temp = {
                         file_url : file_url,
-                        OCR : analyze_report_resp
+                        OCR : analyze_report_resp,
+                        uploaded_at : datetime
                     }
                   reports.push(temp);      
                   //   reports_ocr.push(analyze_report_resp);                    
                 }
-                
-                // const update = await _db.collection('profile').updateOne({
-                //     "phone_number": phone_number
-                // }, {
-                //     $set: {
-                //         user_name : req.body.user_name,
-                //         user_email : req.body.user_email, 
-                //         user_photo : file_url,
-                //         user_status : 'old'
-                //     }
-                // });
-                console.log('final reports',reports);              
+                for (var key of Object.keys(reports)) {
+                    console.log(reports[key])
+                    let where = {
+                        userNumber :phone_number
+                    }
+                    let data = {
+                        reports : reports[key]
+                    }
+                    var resp = await models.update_data_push('profiles', where ,data, '$push')
+                    console.log('resp',resp);     
+                    if(!resp){
+                        var resp = {
+                            status : false,
+                            message: 'Unable to Update in DB'
+                        }
+                        res.status(500);
+                        res.json(resp);
+                    }         
+                }
+                var resp = {
+                    status : true,
+                    message: 'Report Updated '
+                }
+                res.status(200);
+                res.json(resp);
+            }
+        }else{
+            var resp = {
+                status : false,
+                message: 'Unauthorized access'
+            }
+            res.status(401);
+            res.json(resp);
+        }
+    })
+}
+exports.get_report = async function (req, res){
+    const { body , files} = req;
+    console.log(body.pid)
+    await validate_user(body.access_token).then(async (response)=>{
+        if(!response){    
+            var uid = response.uid;
+            // var phone_number = response.phone_number;  
+            var phone_number = '+919999999999';  
+            let where = {
+                _id :ObjectId(body.pid)
+            }
+            let project = {
+                reports : 1
+            }
+            var resp = await models.get_field('profiles', where ,project)
+            console.log('resp',resp[0].reports); 
+            if (resp[0].reports) {
+                var resp = {
+                    status : true,
+                    message: 'Reports Found',
+                    data : resp[0].reports
+                }
+                res.status(200);
+                res.json(resp);
+            }else{
+                var resp = {
+                    status : false,
+                    message: 'No Reports Found '
+                }
+                res.status(200);
+                res.json(resp);
             }
         }else{
             var resp = {
