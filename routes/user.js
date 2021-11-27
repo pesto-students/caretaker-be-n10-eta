@@ -11,5 +11,6 @@ router.post('/delete_profile', user.delete_profile);
 router.post('/get_emergency_details', user.get_emergency_details);
 router.post('/test_insert', user.test_insert);
 router.post('/test_ocr', user.test_ocr);
+router.post('/upload_report', user.upload_report);
 
 module.exports = router;
