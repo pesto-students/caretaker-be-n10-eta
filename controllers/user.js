@@ -508,7 +508,7 @@ exports.upload_report = async function (req, res){
     const { body , files} = req;
     console.log(body.pid)
     await validate_user(body.access_token).then(async (response)=>{
-        if(!response){    
+        if(response){    
             var uid = response.uid;
             var phone_number = response.phone_number;       
             var reports = [];      
@@ -538,7 +538,7 @@ exports.upload_report = async function (req, res){
                     let data = {
                         reports : reports[key]
                     }
-                    var resp = await models.update_data_push('profiles', where ,data, '$push')
+                    var resp = await models.update_data_push('profiles', where ,data)
                     console.log('resp',resp);     
                     if(!resp){
                         var resp = {
@@ -607,6 +607,49 @@ exports.get_report = async function (req, res){
             res.json(resp);
         }
     })
+}
+exports.update_profile = async function (req, res){
+    const { body , files} = req;
+    console.log(body.pid)
+    await validate_user(body.access_token).then(async (response)=>{
+        if(response){    
+            var uid = response.uid;
+            var phone_number = response.phone_number;  
+            
+            let where = {
+                _id :ObjectId(body.pid)
+            }
+            let data = {
+                'profile_details.name' : body.name,
+                'profile_details.age' : body.age,
+                'profile_details.blood_group' : body.blood_group,
+                'profile_details.emergency_contact' : body.emergency_contact,
+            }
+            var resp = await models.update_data_set('profiles', where ,data)
+            if(!resp){
+                var resp = {
+                    status : false,
+                    message: 'Unable to Update in DB'
+                }
+                res.status(500);
+                res.json(resp);
+            } else{
+                var resp = {
+                    status : true,
+                    message: 'Profile Details Updated '
+                }
+                res.status(200);
+                res.json(resp);
+            }
+        }else{
+            var resp = {
+                status : false,
+                message: 'Unauthorized access'
+            }
+            res.status(401);
+            res.json(resp);
+        }
+    }) 
 }
 
 
