@@ -570,7 +570,7 @@ exports.get_report = async function (req, res){
     const { body , files} = req;
     console.log(body.pid)
     await validate_user(body.access_token).then(async (response)=>{
-        if(!response){    
+        if(response){    
             var uid = response.uid;
             // var phone_number = response.phone_number;  
             var phone_number = '+919999999999';  
