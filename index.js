@@ -4,6 +4,7 @@ var userRouter = require('./routes/user');
 var doctorRouter = require('./routes/doctor');
 var diseaseRouter = require('./routes/disease');
 var reqDiseaseRouter = require('./routes/reqDisease');
+var adminRouter = require('./routes/admin')
 
 // const app = require('./api/index');
 var express = require('express');
@@ -25,7 +26,8 @@ app.use('/', loginRouter);
 app.use('/', userRouter);
 app.use('/',doctorRouter);
 app.use('/',diseaseRouter);
-app.use('/',reqDiseaseRouter)
+app.use('/',reqDiseaseRouter);
+app.use('/',adminRouter)
 var server = app.listen(process.env.PORT || 8081, function () {
     var host = server.address().address
     var port = server.address().port    

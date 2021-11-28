@@ -90,23 +90,3 @@ exports.getDoctors= async function (req, res){
    });
 }
 
-
-
-
-
-exports.getAdminDetails= async function (req, res){
-    MongoClient.connect(process.env.MONGO_URL, async function(err, db) {
-       if (err) throw err;                
-       var dbData = db.db('care_tracker')
-       const datac = await dbData.collection("users").find({user_type: 'doctor'})
-       .toArray(function (err, result) {
-           
-           console.log(result.length,'lenght')
-           var response = {'status': true, 'doctor' : result.length}
-           res.json(response);
-        })
-       
-       
-   });
-}
-
