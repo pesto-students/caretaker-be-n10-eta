@@ -670,7 +670,7 @@ exports.get_dashboard_data = async function (req, res){
             var resp = await models.get_field('profiles', where ,project)
             console.log('resp',resp.length);
             var profile_reports =[];
-            for await (var i = 0; i< resp.length; i++){
+            for (var i = 0; i< resp.length; i++){
                 let name = resp[i].profile_details.name
                 if(name in profile_reports){
                     for(var j = 0; j < resp[i].reports.length; j++){
@@ -743,6 +743,7 @@ exports.get_dashboard_data = async function (req, res){
                 message: 'Data Found',
                 data : profile_reports
             }
+            console.log('sending rsp',resp);
             res.status(200);
             res.json(resp);
         }else{
