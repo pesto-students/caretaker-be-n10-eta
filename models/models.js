@@ -51,7 +51,7 @@ exports.update_data_set =  async function (collection_name, where , data){
     }
     return response
 }
-exports.get_field =  async function (collection_name, where , project,){
+exports.get_field =  async function (collection_name, where , project){
     console.log('where', where);
     var response;
     var _db

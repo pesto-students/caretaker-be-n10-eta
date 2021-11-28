@@ -12,5 +12,6 @@ router.post('/get_emergency_details', user.get_emergency_details);
 router.post('/upload_report', user.upload_report);
 router.post('/get_report', user.get_report);
 router.post('/update_profile', user.update_profile);
+router.post('/get_dashboard_data', user.get_dashboard_data);
 
 module.exports = router;

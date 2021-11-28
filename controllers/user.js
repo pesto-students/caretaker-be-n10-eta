@@ -572,8 +572,8 @@ exports.get_report = async function (req, res){
     await validate_user(body.access_token).then(async (response)=>{
         if(response){    
             var uid = response.uid;
-            // var phone_number = response.phone_number;  
-            var phone_number = '+919999999999';  
+            var phone_number = response.phone_number;  
+            // var phone_number = '+919999999999';  
             let where = {
                 _id :ObjectId(body.pid)
             }
@@ -652,5 +652,77 @@ exports.update_profile = async function (req, res){
     }) 
 }
 
+exports.get_dashboard_data = async function (req, res){
+    const { body , files} = req;
+    await validate_user(body.access_token).then(async (response)=>{
+        if(response){    
+            var uid = response.uid;
+            // var phone_number = '+919999999999';  
+            var phone_number = response.phone_number;  
+            console.log(phone_number)
+            var where = {
+                userNumber : phone_number
+            }            
+            let project = {
+                reports : 1,
+                profile_details : 1
+            }
+            var resp = await models.get_field('profiles', where ,project)
+            console.log('resp',resp.length);
+            var profile_reports =[];
+            for(var i = 0; i< resp.length; i++){
+                let name = resp[i].profile_details.name
+                if(name in profile_reports){
+                    for(var j = 0; j < resp[i].reports.length; j++){
+                        var OCR = resp[i].reports[j].OCR
+                        var uploaded_at = resp[i].reports[j].uploaded_at
+                        var test = body.test
+                        console.log(test);
+                        switch(test){
+                            case 'hm' :
+                                console.log('case hm');
+                                let hm = [OCR.Haemoglobin, uploaded_at]
+                                profile_reports[name].push(hm)
+                                break;
 
+                            case 'rbc' :
+                                console.log('case rbc');
+                                let RBC = [OCR.RBC, uploaded_at]
+                                profile_reports[name].push(RBC)
+                                break;
 
+                            case 'wbc' :
+                                console.log('case wbc');
+                                let WBC = [OCR.WBC, uploaded_at]
+                                profile_reports[name].push(WBC)
+                                break;
+
+                        }
+                    }
+                }else{
+                    console.log('in else', name)
+                    profile_reports[name] = []
+                    
+                    for(var j = 0; j < resp[i].reports.length; j++){
+                        var OCR = resp[i].reports[j].OCR
+                        var uploaded_at = resp[i].reports[j].uploaded_at
+                        console.log(body.test)
+                        switch(body.test){
+                            case 'hm' :
+                                let hm = [OCR.Haemoglobin, uploaded_at]
+                                profile_reports[name].push(hm)
+                            case 'rbc' :
+                                let RBC = [OCR.RBC, uploaded_at]
+                                profile_reports[name].push(RBC)
+                            case 'wbc' :
+                                let WBC = [OCR.WBC, uploaded_at]
+                                profile_reports[name].push(WBC)
+
+                        }
+                    }
+                }
+            }
+            console.log(profile_reports);
+        }
+    })
+}
