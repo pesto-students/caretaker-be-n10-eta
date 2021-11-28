@@ -680,21 +680,24 @@ exports.get_dashboard_data = async function (req, res){
                         console.log(test);
                         switch(test){
                             case 'hm' :
-                                console.log('case hm');
-                                let hm = [OCR.Haemoglobin, uploaded_at]
-                                profile_reports[name].push(hm)
+                                if (OCR.Haemoglobin) {                                    
+                                    let hm = [OCR.Haemoglobin, uploaded_at]
+                                    profile_reports[name].push(hm)
+                                }
                                 break;
 
                             case 'rbc' :
-                                console.log('case rbc');
-                                let RBC = [OCR.RBC, uploaded_at]
-                                profile_reports[name].push(RBC)
+                                if (OCR.RBC) {      
+                                    let RBC = [OCR.RBC, uploaded_at]
+                                    profile_reports[name].push(RBC)
+                                }
                                 break;
 
                             case 'wbc' :
-                                console.log('case wbc');
+                                if (OCR.WBC) {  
                                 let WBC = [OCR.WBC, uploaded_at]
                                 profile_reports[name].push(WBC)
+                                }
                                 break;
 
                         }
@@ -707,16 +710,28 @@ exports.get_dashboard_data = async function (req, res){
                         var OCR = resp[i].reports[j].OCR
                         var uploaded_at = resp[i].reports[j].uploaded_at
                         console.log(body.test)
-                        switch(body.test){
+                        
+                        switch(test){
                             case 'hm' :
-                                let hm = [OCR.Haemoglobin, uploaded_at]
-                                profile_reports[name].push(hm)
+                                if (OCR.Haemoglobin) {                                    
+                                    let hm = [OCR.Haemoglobin, uploaded_at]
+                                    profile_reports[name].push(hm)
+                                }
+                                break;
+
                             case 'rbc' :
-                                let RBC = [OCR.RBC, uploaded_at]
-                                profile_reports[name].push(RBC)
+                                if (OCR.RBC) {      
+                                    let RBC = [OCR.RBC, uploaded_at]
+                                    profile_reports[name].push(RBC)
+                                }
+                                break;
+
                             case 'wbc' :
+                                if (OCR.WBC) {  
                                 let WBC = [OCR.WBC, uploaded_at]
                                 profile_reports[name].push(WBC)
+                                }
+                                break;
 
                         }
                     }
