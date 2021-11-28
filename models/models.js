@@ -15,6 +15,7 @@ exports.insert_data =  async function (collection_name, data){
     } else {
         response = false;
     }
+    db.close();
     return response
 }
 exports.update_data_push =  async function (collection_name, where , data, operation){
@@ -32,6 +33,7 @@ exports.update_data_push =  async function (collection_name, where , data, opera
     } else {
         response = false;
     }
+    db.close();
     return response
 }
 exports.update_data_set =  async function (collection_name, where , data){
@@ -49,6 +51,7 @@ exports.update_data_set =  async function (collection_name, where , data){
     } else {
         response = false;
     }
+    db.close();
     return response
 }
 exports.get_field =  async function (collection_name, where , project){
@@ -63,11 +66,12 @@ exports.get_field =  async function (collection_name, where , project){
     .project(project)
     .toArray();
     // console.log('find', find);
-    // if (find.acknowledged) { 
-    //     response =true; 
-    // } else {
-    //     response = false;
-    // }
+    if (find) { 
+        response =find; 
+    } else {
+        response = false;
+    }
+    db.close();
     return find
 }
 
