@@ -738,6 +738,20 @@ exports.get_dashboard_data = async function (req, res){
                 }
             }
             console.log(profile_reports);
+            var resp = {
+                status : true,
+                message: 'Data Found',
+                data : profile_reports
+            }
+            res.status(200);
+            res.json(resp);
+        }else{
+            var resp = {
+                status : false,
+                message: 'Unauthorized access'
+            }
+            res.status(401);
+            res.json(resp);
         }
     })
 }
