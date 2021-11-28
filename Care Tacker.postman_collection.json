@@ -1,0 +1,113 @@
+{
+	"info": {
+		"_postman_id": "bee076e4-8ca6-4327-b02f-baf3e3fede45",
+		"name": "Care Tacker",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "127.0.0.1:8081/"
+			},
+			"response": []
+		},
+		{
+			"name": "Create Profile",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "access_token",
+							"value": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImY1NWUyOTRlZWRjMTY3Y2Q5N2JiNWE4MTliYmY3OTA2MzZmMTIzN2UiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vY2FyZXRyYWNrZXItMTYwNzgiLCJhdWQiOiJjYXJldHJhY2tlci0xNjA3OCIsImF1dGhfdGltZSI6MTYzNzA0ODcyNCwidXNlcl9pZCI6IlB0cjdCZ3R5SEpQdzhYeUlwbW90MEJZS1R0UjIiLCJzdWIiOiJQdHI3Qmd0eUhKUHc4WHlJcG1vdDBCWUtUdFIyIiwiaWF0IjoxNjM3MDQ4NzI0LCJleHAiOjE2MzcwNTIzMjQsInBob25lX251bWJlciI6Iis5MTc4Mjg5MDkxOTIiLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7InBob25lIjpbIis5MTc4Mjg5MDkxOTIiXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwaG9uZSJ9fQ.LixkasaM59qlozdWndv6TKDGd3h3N418Pj_OctRLUG1krk8Oik3wtbfrmeneLTBehGLVUEPsQNUnq5omDAdUQI6t55NSezBR_rHDinq2tHpx-b-hrrsTQBpEuWYa7RmsmAa9D-43gXMzLEwcb3o5ofq2J3LnThituAQ33mHiQEd6i3jhKjAsEBVUAsWK9cyI_AqzAz95UafkpsDLaIYBErollURFSI7nNvCTmWFfgUrL2ySHF2QM9le4X7OhyBzzsJIpzGZ-KQn5oESAeTtbkA8iT6yPg85n8FoEKtRE5j1PoFNX3Dx8NuSRw1d39DqHHTr5Xntm37BdiuTJowi9WQ",
+							"type": "text"
+						},
+						{
+							"key": "name",
+							"value": "Akshay",
+							"type": "text"
+						},
+						{
+							"key": "age",
+							"value": "28",
+							"type": "text"
+						},
+						{
+							"key": "blood_group",
+							"value": "B+",
+							"type": "text"
+						},
+						{
+							"key": "disease",
+							"value": "[bp,sugar]",
+							"type": "text"
+						},
+						{
+							"key": "emergency_contact",
+							"value": "9907333287",
+							"type": "text"
+						},
+						{
+							"key": "reports",
+							"type": "file",
+							"src": [
+								"/C:/Users/Akshay/Downloads/Untitled.png",
+								"/C:/Users/Akshay/Downloads/Happiwifi.png"
+							]
+						}
+					]
+				},
+				"url": "127.0.0.1:8081/create_profile"
+			},
+			"response": []
+		},
+		{
+			"name": "get profile list",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "access_token",
+							"value": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImY1NWUyOTRlZWRjMTY3Y2Q5N2JiNWE4MTliYmY3OTA2MzZmMTIzN2UiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vY2FyZXRyYWNrZXItMTYwNzgiLCJhdWQiOiJjYXJldHJhY2tlci0xNjA3OCIsImF1dGhfdGltZSI6MTYzNzA1MzM2MywidXNlcl9pZCI6IlB0cjdCZ3R5SEpQdzhYeUlwbW90MEJZS1R0UjIiLCJzdWIiOiJQdHI3Qmd0eUhKUHc4WHlJcG1vdDBCWUtUdFIyIiwiaWF0IjoxNjM3MDUzMzYzLCJleHAiOjE2MzcwNTY5NjMsInBob25lX251bWJlciI6Iis5MTc4Mjg5MDkxOTIiLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7InBob25lIjpbIis5MTc4Mjg5MDkxOTIiXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwaG9uZSJ9fQ.AKFVSXQCd4JkjJTY141Y6-pxUjMQB2soB2fQCwCeZZthP1W3JY4lUk6_oFjwzZnhgfJCIWJNEKLJzg_yoh2xfRYHk6_1i5xX99ksry27IgDBFR4JDpZPE1L7GhNJkha0enkfl9QUDm3oQz8ZY-ZuGw2Aj9fDCURRostoSCDyyHDbT6q_6Zm5RHkB80b5sSeKloEP6kSWOOwHAMwt09o453GGHRaqJid_KS0t2mWT7HUGhD19rqGbYQGXy1UNWEh0DFocDZ7GbeeUpoFv3DTFZg9rIXLXUZt6jlpF-Mchrk3jj7dfcAGB4TAj7JiVTqrvTqyS0Ba_qewFc4xohBNW2g",
+							"type": "text"
+						}
+					]
+				},
+				"url": "127.0.0.1:8081/get_profile_list"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete profile",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "access_token",
+							"value": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImY1NWUyOTRlZWRjMTY3Y2Q5N2JiNWE4MTliYmY3OTA2MzZmMTIzN2UiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vY2FyZXRyYWNrZXItMTYwNzgiLCJhdWQiOiJjYXJldHJhY2tlci0xNjA3OCIsImF1dGhfdGltZSI6MTYzNzA1MzM2MywidXNlcl9pZCI6IlB0cjdCZ3R5SEpQdzhYeUlwbW90MEJZS1R0UjIiLCJzdWIiOiJQdHI3Qmd0eUhKUHc4WHlJcG1vdDBCWUtUdFIyIiwiaWF0IjoxNjM3MDUzMzYzLCJleHAiOjE2MzcwNTY5NjMsInBob25lX251bWJlciI6Iis5MTc4Mjg5MDkxOTIiLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7InBob25lIjpbIis5MTc4Mjg5MDkxOTIiXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwaG9uZSJ9fQ.AKFVSXQCd4JkjJTY141Y6-pxUjMQB2soB2fQCwCeZZthP1W3JY4lUk6_oFjwzZnhgfJCIWJNEKLJzg_yoh2xfRYHk6_1i5xX99ksry27IgDBFR4JDpZPE1L7GhNJkha0enkfl9QUDm3oQz8ZY-ZuGw2Aj9fDCURRostoSCDyyHDbT6q_6Zm5RHkB80b5sSeKloEP6kSWOOwHAMwt09o453GGHRaqJid_KS0t2mWT7HUGhD19rqGbYQGXy1UNWEh0DFocDZ7GbeeUpoFv3DTFZg9rIXLXUZt6jlpF-Mchrk3jj7dfcAGB4TAj7JiVTqrvTqyS0Ba_qewFc4xohBNW2g",
+							"type": "text"
+						},
+						{
+							"key": "profile_id",
+							"value": "61936eab9060bf2a73a3cea4",
+							"type": "text"
+						}
+					]
+				},
+				"url": "127.0.0.1:8081/delete_profile"
+			},
+			"response": []
+		}
+	]
+}
