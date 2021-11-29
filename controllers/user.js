@@ -145,6 +145,7 @@ exports.updateAccountDetails = async function (req, res){
                             message : "File upload Failed"
                         }
                     }
+                    db.close();
                     res.json(response);
                 })
             }else{                   
@@ -193,6 +194,7 @@ exports.getUser_details = async function (req, res){
                         message : "Details Not Found"
                     }
                 }
+                db.close();
                 res.status(200);
                 res.json(response);
             })
