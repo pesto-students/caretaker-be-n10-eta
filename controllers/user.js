@@ -78,6 +78,7 @@ exports.updateAccountDetails = async function (req, res){
                             user_status : 'old'
                         }
                     });
+                    db.close();
                     console.log('update',uid)
                     var response;
                     if (update.acknowledged) {

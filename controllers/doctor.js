@@ -59,7 +59,7 @@ exports.doctorAdd = async function (req, res){
              })
             
         })
-        
+          db.close();
     }else{                   
         var response = {
             status : false,
@@ -86,7 +86,8 @@ exports.getDoctors= async function (req, res){
                res.json(resp);
                // res.json(result);
            });
-      
+          
    });
+   db.close();
 }
 

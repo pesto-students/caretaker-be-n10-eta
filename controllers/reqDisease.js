@@ -38,6 +38,7 @@ exports.addReqDisease = async function (req, res){
                             reqDisease :reqDisease,
                             userName : userName
                         })
+                        db.close();
                         var response = {'status': true, message : "Add Disease successfully"}
                         res.json(response);
                     }
@@ -79,6 +80,7 @@ exports.getReqDisease= async function (req, res){
                res.json(resp);
                // res.json(result);
            });
+           db.close();
       
    });
 }
@@ -110,6 +112,7 @@ exports.deleteReqDisease = async function (req, res) {
                         res.json(result);
 
                     }
+                    db.close();
             })
 }
 
