@@ -394,6 +394,7 @@ exports.delete_profile = async function (req, res) {
                         res.status(200);
                         res.json(result);
                     }
+                    db.close();
             })
         }else{            
             var resp = {
@@ -436,77 +437,11 @@ exports.get_emergency_details = async function (req, res){
                 res.json(result);
 
             }
+            db.close();
     })
        
 }
 
-exports.test_insert = async function (req, res){
-    var data = {
-        hello:'234'
-    }
-    var resp = await models.insert_data('test',data)
-    console.log('req',resp)
-}
-
-exports.test_ocr = async function (req, res){
-    const { body, files } = req 
-    var image;
-    await fs1.readFile(req.files.file.tempFilePath, async function (err, data) {    
-        image = uuidv4()+req.files.file.name
-        s3 = new aws.S3({apiVersion: '2006-03-01'});
-        var params123 = {Bucket: 'caretrackerreports', Key: image, Body: data};
-        s3.upload(params123,async function(err, data1) {
-            console.log(err, data1);
-            
-            console.log(image);
-            const client = new RekognitionClient({ region: "ap-south-1"});
-            const params = {
-                Image : {
-                    S3Object: {
-                        Bucket:'caretrackerreports',
-                        Name : image
-                    }
-                }
-            };
-            const command = new DetectTextCommand(params);
-            const response = await client.send(command);
-            var size  = Object.keys(response.TextDetections).length;
-            var Haemoglobin, rbc,wbc;
-            for (var key of Object.keys(response.TextDetections)) {
-                var text = response.TextDetections[key].DetectedText;
-                var type = response.TextDetections[key].Type;
-                if(text == "Haemoglobin" && type == "LINE"){
-                    console.log( response.TextDetections[key].DetectedText )
-                    nextIndex =parseInt(key) +1
-                    Haemoglobin = response.TextDetections[nextIndex].DetectedText
-                    console.log( Haemoglobin )
-                }
-                if(text == "Total RBC Count" && type == "LINE"){
-                    console.log( response.TextDetections[key].DetectedText )
-                    nextIndex =parseInt(key) +1
-                    rbc = response.TextDetections[nextIndex].DetectedText
-                    console.log( rbc )
-                }
-                if(text == "Total WBC Count" && type == "LINE"){
-                    console.log( response.TextDetections[key].DetectedText )
-                    nextIndex =parseInt(key) +1
-                    wbc = response.TextDetections[nextIndex].DetectedText
-                    console.log( wbc )
-                }
-                var data = {
-                    Haemoglobin:Haemoglobin,
-                    RBC:rbc,
-                    WBC:wbc,
-                }
-            }
-            var resp = await models.insert_data('report_analysis',data)
-            console.log('req',resp)
-            // console.log(response)
-            // res.json(response.TextDetections)
-        });
-    })
-
-}
 exports.upload_report = async function (req, res){
     const { body , files} = req;
     console.log(body.pid)
