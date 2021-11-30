@@ -45,9 +45,9 @@ exports.addDisease = async function (req, res){
                 res.json(response);
              }
              })
-            
+             //db.close();
         })
-        
+          db.close();
     }else{                   
         var response = {
             status : false,
@@ -74,6 +74,7 @@ exports.getDisease= async function (req, res){
                res.json(resp);
                // res.json(result);
            });
+           db.close();
       
    });
 }
@@ -105,6 +106,7 @@ exports.mergeDisease = async function (req, res){
                             message : "Merge Failed"
                         }
                     }
+                    //db.close(); 
                     res.json(response);
                 })
             }else{                   
