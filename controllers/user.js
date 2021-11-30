@@ -2,13 +2,12 @@ require('dotenv').config()
 var unlink  =  require('fs').unlink;
 const fs = require('fs').promises;
 const fs1 = require('fs');
-const util = require('util');
 var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
 var admin = require("firebase-admin");
 var cloudinary = require('cloudinary');
 var QRCode = require('qrcode')
-const { RekognitionClient, CompareFacesCommand, DetectTextCommand } = require("@aws-sdk/client-rekognition");
+const { RekognitionClient, DetectTextCommand } = require("@aws-sdk/client-rekognition");
 const { v1: uuidv1,v4: uuidv4} = require('uuid');
 var aws = require("aws-sdk");
 cloudinary.config(process.env.CLOUDINARY_CONFIG);
@@ -52,72 +51,62 @@ async function upload_local_file (file, folder_name){
 async function analyze_report (file){
     var image;
     console.log('analyze_report called')
-    var xyz = await fs.readFile(file.tempFilePath, async function (err, data) {    
-        image = uuidv4()+file.name
-        s3 = new aws.S3({apiVersion: '2006-03-01'});
-        var params123 = {Bucket: 'caretrackerreports', Key: image, Body: data};
-        console.log('before upload');
-        await s3.upload(params123,async function(err, data1) {
-            console.log('inside upload');
-            const client = new RekognitionClient({ region: "ap-south-1"});
-            const params = {
-                Image : {
-                    S3Object: {
-                        Bucket:'caretrackerreports',
-                        Name : image
-                    }
-                }
-            };
-            const command = new DetectTextCommand(params);
-            const response = await client.send(command);
-            var size  = Object.keys(response.TextDetections).length;
-            var Haemoglobin, rbc,wbc,data = "";
-            for (var key of Object.keys(response.TextDetections)) {
-                var text = response.TextDetections[key].DetectedText;
-                var type = response.TextDetections[key].Type;
-                if(text == "Haemoglobin" && type == "LINE"){
-                    console.log( response.TextDetections[key].DetectedText )
-                    nextIndex =parseInt(key) +1
-                    Haemoglobin = response.TextDetections[nextIndex].DetectedText
-                    console.log( Haemoglobin )
-                }
-                if(text == "Total RBC Count" && type == "LINE"){
-                    console.log( response.TextDetections[key].DetectedText )
-                    nextIndex =parseInt(key) +1
-                    rbc = response.TextDetections[nextIndex].DetectedText
-                    console.log( rbc )
-                }
-                if(text == "Total WBC Count" && type == "LINE"){
-                    console.log( response.TextDetections[key].DetectedText )
-                    nextIndex =parseInt(key) +1
-                    wbc = response.TextDetections[nextIndex].DetectedText
-                    console.log( wbc )
-                }
-                data = {
-                    Haemoglobin:Haemoglobin,
-                    RBC:rbc,
-                    WBC:wbc,
-                }
-            }
-            console.log ('data', data)
-            console.log ('ready to send resp')
-            return '123'
-            // var resp = await models.insert_data('report_analysis',data)
-            // console.log('req',resp)
-            // console.log(response)
-            // res.json(response.TextDetections)
-        });
-    })
-    console.log('xyz',xyz);
-    
+    var xyz = await fs.readFile(file.tempFilePath)
     s3 = new aws.S3({apiVersion: '2006-03-01'});
+    image = uuidv4()+file.name
     var params123 = {Bucket: 'caretrackerreports', Key: image, Body: xyz};
-    console.log('before upload');
-    await s3.upload(params123,async function(err, data1) {
-        console.log('inside upload',data1);
-        const client = new RekognitionClient({ region: "ap-south-1"});
-    })
-    return '321'
+    // console.log('before upload',params123);
+    var upload = await s3.upload(params123,async function(err, data1) {
+        console.log('upload to s3 data', data1,err)
+        return data1;
+    }).promise()
+    const client = new RekognitionClient({ region: "ap-south-1"});
+    const params = {
+        Image : {
+            S3Object: {
+                Bucket:'caretrackerreports',
+                Name : image
+            }
+        }
+    };
+    if(!upload.failed){
+        // console.log('upload', upload)
+        
+    }
+    const command = new DetectTextCommand(params);
+    const response = await client.send(command,params);
+    var size  = Object.keys(response.TextDetections).length;
+    var Haemoglobin, rbc,wbc,data = "";
+    for (var key of Object.keys(response.TextDetections)) {
+        var text = response.TextDetections[key].DetectedText;
+        var type = response.TextDetections[key].Type;
+        if(text == "Haemoglobin" && type == "LINE"){
+            console.log( response.TextDetections[key].DetectedText )
+            nextIndex =parseInt(key) +1
+            Haemoglobin = response.TextDetections[nextIndex].DetectedText
+            console.log( Haemoglobin )
+        }
+        if(text == "Total RBC Count" && type == "LINE"){
+            console.log( response.TextDetections[key].DetectedText )
+            nextIndex =parseInt(key) +1
+            rbc = response.TextDetections[nextIndex].DetectedText
+            console.log( rbc )
+        }
+        if(text == "Total WBC Count" && type == "LINE"){
+            console.log( response.TextDetections[key].DetectedText )
+            nextIndex =parseInt(key) +1
+            wbc = response.TextDetections[nextIndex].DetectedText
+            console.log( wbc )
+        }
+        data = {
+            Haemoglobin:Haemoglobin,
+            RBC:rbc,
+            WBC:wbc,
+        }
+    }
+    return data
+    // return '321'
+    // return '321'
 }
 
 exports.updateAccountDetails = async function (req, res){
@@ -146,6 +135,7 @@ exports.updateAccountDetails = async function (req, res){
                             user_status : 'old'
                         }
                     });
+                    db.close();
                     console.log('update',uid)
                     var response;
                     if (update.acknowledged) {
@@ -156,6 +146,7 @@ exports.updateAccountDetails = async function (req, res){
                             message : "File upload Failed"
                         }
                     }
+                    db.close();
                     res.json(response);
                 })
             }else{                   
@@ -204,6 +195,7 @@ exports.getUser_details = async function (req, res){
                         message : "Details Not Found"
                     }
                 }
+                db.close();
                 res.status(200);
                 res.json(response);
             })
@@ -222,26 +214,30 @@ exports.getUser_details = async function (req, res){
 
 exports.create_profile = async function (req, res) {
     var params = JSON.parse(JSON.stringify(req.body));
-    console.log ('request params', req.body)
-    console.log ('request files', req.files)
-    console.log ('reports in body', req.body.reports)
      await validate_user(params.access_token).then(async (response)=>{
         if(response){        
             var uid = response.uid;
             var phone_number = response.phone_number;
             var reports = [];
+            var reports_ocr = [];
               if (req.files && Object.keys(req.files).length != 0) {
                 if (req.files.reports && Object.keys(req.files.reports).length != 0)
                 {
                     console.log(Object.keys(req.files.reports).length, 'reports length')
-                    console.log(req.files.reports)
                     // (var index of Object.keys(req.files.reports)
                     for(var index of Object.keys(req.files.reports)) {
                       const file = req.files.reports[index];
                       var file_url = await upload_file(file,'reports')
-                    //   var report = await analyze_report(file);
-                        // console.log('report123', report);
-                      reports.push(file_url);                    
+                      var analyze_report_resp = await analyze_report(file);
+                        console.log('report123', analyze_report_resp);
+                        var datetime = new Date();
+                        var temp = {
+                            file_url : file_url,
+                            OCR : analyze_report_resp,
+                            uploaded_at : datetime
+                        }
+                      reports.push(temp);                    
+                    //   reports_ocr.push(analyze_report_resp);                    
                     }
                 }
             }
@@ -262,6 +258,7 @@ exports.create_profile = async function (req, res) {
                     userNumber: phone_number,
                     profile_details :obj,
                     reports : reports, 
+                    reports_ocr : reports_ocr, 
                     profile_status : 1, 
                     profile_photo : "",
                     qr_code : ""
@@ -397,6 +394,7 @@ exports.delete_profile = async function (req, res) {
                         res.status(200);
                         res.json(result);
                     }
+                    db.close();
             })
         }else{            
             var resp = {
@@ -439,77 +437,260 @@ exports.get_emergency_details = async function (req, res){
                 res.json(result);
 
             }
+            db.close();
     })
        
 }
 
-exports.test_insert = async function (req, res){
-    var data = {
-        hello:'234'
-    }
-    var resp = await models.insert_data('test',data)
-    console.log('req',resp)
+exports.upload_report = async function (req, res){
+    const { body , files} = req;
+    console.log(body.pid)
+    await validate_user(body.access_token).then(async (response)=>{
+        if(response){    
+            var uid = response.uid;
+            var phone_number = response.phone_number;       
+            var reports = [];      
+            if (files.reports && Object.keys(files.reports).length != 0)
+            {
+                console.log(Object.keys(req.files.reports).length, 'reports length')
+                // (var index of Object.keys(req.files.reports)
+                for(var index of Object.keys(req.files.reports)) {
+                  const file = req.files.reports[index];
+                  var file_url = await upload_file(file,'reports')
+                  var analyze_report_resp = await analyze_report(file);
+                    console.log('report123', analyze_report_resp);
+                    var datetime = new Date();
+                    var temp = {
+                        file_url : file_url,
+                        OCR : analyze_report_resp,
+                        uploaded_at : datetime
+                    }
+                  reports.push(temp);      
+                  //   reports_ocr.push(analyze_report_resp);                    
+                }
+                for (var key of Object.keys(reports)) {
+                    console.log(reports[key])
+                    let where = {
+                        userNumber :phone_number
+                    }
+                    let data = {
+                        reports : reports[key]
+                    }
+                    var resp = await models.update_data_push('profiles', where ,data)
+                    console.log('resp',resp);     
+                    if(!resp){
+                        var resp = {
+                            status : false,
+                            message: 'Unable to Update in DB'
+                        }
+                        res.status(500);
+                        res.json(resp);
+                    }         
+                }
+                var resp = {
+                    status : true,
+                    message: 'Report Updated '
+                }
+                res.status(200);
+                res.json(resp);
+            }
+        }else{
+            var resp = {
+                status : false,
+                message: 'Unauthorized access'
+            }
+            res.status(401);
+            res.json(resp);
+        }
+    })
+}
+exports.get_report = async function (req, res){
+    const { body , files} = req;
+    console.log(body.pid)
+    await validate_user(body.access_token).then(async (response)=>{
+        if(response){    
+            var uid = response.uid;
+            var phone_number = response.phone_number;  
+            // var phone_number = '+919999999999';  
+            let where = {
+                _id :ObjectId(body.pid)
+            }
+            let project = {
+                reports : 1
+            }
+            var resp = await models.get_field('profiles', where ,project)
+            console.log('resp',resp[0].reports); 
+            if (resp[0].reports) {
+                var resp = {
+                    status : true,
+                    message: 'Reports Found',
+                    data : resp[0].reports
+                }
+                res.status(200);
+                res.json(resp);
+            }else{
+                var resp = {
+                    status : false,
+                    message: 'No Reports Found '
+                }
+                res.status(200);
+                res.json(resp);
+            }
+        }else{
+            var resp = {
+                status : false,
+                message: 'Unauthorized access'
+            }
+            res.status(401);
+            res.json(resp);
+        }
+    })
+}
+exports.update_profile = async function (req, res){
+    const { body , files} = req;
+    console.log(body.pid)
+    await validate_user(body.access_token).then(async (response)=>{
+        if(response){    
+            var uid = response.uid;
+            var phone_number = response.phone_number;  
+            
+            let where = {
+                _id :ObjectId(body.pid)
+            }
+            let data = {
+                'profile_details.name' : body.name,
+                'profile_details.age' : body.age,
+                'profile_details.blood_group' : body.blood_group,
+                'profile_details.emergency_contact' : body.emergency_contact,
+            }
+            var resp = await models.update_data_set('profiles', where ,data)
+            if(!resp){
+                var resp = {
+                    status : false,
+                    message: 'Unable to Update in DB'
+                }
+                res.status(500);
+                res.json(resp);
+            } else{
+                var resp = {
+                    status : true,
+                    message: 'Profile Details Updated '
+                }
+                res.status(200);
+                res.json(resp);
+            }
+        }else{
+            var resp = {
+                status : false,
+                message: 'Unauthorized access'
+            }
+            res.status(401);
+            res.json(resp);
+        }
+    }) 
 }
 
-exports.test_ocr = async function (req, res){
-    const { body, files } = req 
-    var image;
-    await fs1.readFile(req.files.file.tempFilePath, async function (err, data) {    
-        image = uuidv4()+req.files.file.name
-        s3 = new aws.S3({apiVersion: '2006-03-01'});
-        var params123 = {Bucket: 'caretrackerreports', Key: image, Body: data};
-        s3.upload(params123,async function(err, data1) {
-            console.log(err, data1);
-            
-            console.log(image);
-            const client = new RekognitionClient({ region: "ap-south-1"});
-            const params = {
-                Image : {
-                    S3Object: {
-                        Bucket:'caretrackerreports',
-                        Name : image
+exports.get_dashboard_data = async function (req, res){
+    const { body , files} = req;
+    await validate_user(body.access_token).then(async (response)=>{
+        if(response){    
+            var uid = response.uid;
+            // var phone_number = '+919999999999';  
+            var phone_number = response.phone_number;  
+            console.log(phone_number)
+            var where = {
+                userNumber : phone_number
+            }            
+            let project = {
+                reports : 1,
+                profile_details : 1
+            }
+            var resp = await models.get_field('profiles', where ,project)
+            console.log('resp',resp.length);
+            var profile_reports =[];
+            for (var i = 0; i< resp.length; i++){
+                let name = resp[i].profile_details.name
+                if(name in profile_reports){
+                    for(var j = 0; j < resp[i].reports.length; j++){
+                        var OCR = resp[i].reports[j].OCR
+                        var uploaded_at = resp[i].reports[j].uploaded_at
+                        var test = body.test
+                        console.log(test);
+                        switch(test){
+                            case 'hm' :
+                                if (OCR.Haemoglobin) {                                    
+                                    let hm = [OCR.Haemoglobin, uploaded_at]
+                                    profile_reports[name].push(hm)
+                                }
+                                break;
+
+                            case 'rbc' :
+                                if (OCR.RBC) {      
+                                    let RBC = [OCR.RBC, uploaded_at]
+                                    profile_reports[name].push(RBC)
+                                }
+                                break;
+
+                            case 'wbc' :
+                                if (OCR.WBC) {  
+                                let WBC = [OCR.WBC, uploaded_at]
+                                profile_reports[name].push(WBC)
+                                }
+                                break;
+
+                        }
+                    }
+                }else{
+                    console.log('in else', name)
+                    profile_reports[name] = []
+                    
+                    for(var j = 0; j < resp[i].reports.length; j++){
+                        var OCR = resp[i].reports[j].OCR
+                        var uploaded_at = resp[i].reports[j].uploaded_at
+                        console.log(body.test)
+                        
+                        switch(test){
+                            case 'hm' :
+                                if (OCR.Haemoglobin) {                                    
+                                    let hm = [OCR.Haemoglobin, uploaded_at]
+                                    profile_reports[name].push(hm)
+                                }
+                                break;
+
+                            case 'rbc' :
+                                if (OCR.RBC) {      
+                                    let RBC = [OCR.RBC, uploaded_at]
+                                    profile_reports[name].push(RBC)
+                                }
+                                break;
+
+                            case 'wbc' :
+                                if (OCR.WBC) {  
+                                let WBC = [OCR.WBC, uploaded_at]
+                                profile_reports[name].push(WBC)
+                                }
+                                break;
+
+                        }
                     }
                 }
-            };
-            const command = new DetectTextCommand(params);
-            const response = await client.send(command);
-            var size  = Object.keys(response.TextDetections).length;
-            var Haemoglobin, rbc,wbc;
-            for (var key of Object.keys(response.TextDetections)) {
-                var text = response.TextDetections[key].DetectedText;
-                var type = response.TextDetections[key].Type;
-                if(text == "Haemoglobin" && type == "LINE"){
-                    console.log( response.TextDetections[key].DetectedText )
-                    nextIndex =parseInt(key) +1
-                    Haemoglobin = response.TextDetections[nextIndex].DetectedText
-                    console.log( Haemoglobin )
-                }
-                if(text == "Total RBC Count" && type == "LINE"){
-                    console.log( response.TextDetections[key].DetectedText )
-                    nextIndex =parseInt(key) +1
-                    rbc = response.TextDetections[nextIndex].DetectedText
-                    console.log( rbc )
-                }
-                if(text == "Total WBC Count" && type == "LINE"){
-                    console.log( response.TextDetections[key].DetectedText )
-                    nextIndex =parseInt(key) +1
-                    wbc = response.TextDetections[nextIndex].DetectedText
-                    console.log( wbc )
-                }
-                var data = {
-                    Haemoglobin:Haemoglobin,
-                    RBC:rbc,
-                    WBC:wbc,
-                }
             }
-            var resp = await models.insert_data('report_analysis',data)
-            console.log('req',resp)
-            // console.log(response)
-            // res.json(response.TextDetections)
-        });
+            console.log(profile_reports);
+            var resp = {
+                status : true,
+                message: 'Data Found',
+                data : profile_reports
+            }
+            console.log('sending rsp',resp);
+            res.status(200);
+            res.json(resp);
+        }else{
+            var resp = {
+                status : false,
+                message: 'Unauthorized access'
+            }
+            res.status(401);
+            res.json(resp);
+        }
     })
-
 }
-
-
-
