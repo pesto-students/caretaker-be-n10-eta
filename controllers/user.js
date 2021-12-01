@@ -444,7 +444,7 @@ exports.get_emergency_details = async function (req, res){
 
 exports.upload_report = async function (req, res){
     const { body , files} = req;
-    console.log(body.pid)
+    console.log(files)
     await validate_user(body.access_token).then(async (response)=>{
         if(response){    
             var uid = response.uid;
@@ -607,11 +607,12 @@ exports.get_dashboard_data = async function (req, res){
             }
             var resp = await models.get_field('profiles', where ,project)
             console.log('resp',resp.length);
-            var profile_reports =[];
-            for (var i = 0; i< resp.length; i++){
+            var profile_reports ={};
+            for await(var i of Object.keys(resp)){
                 let name = resp[i].profile_details.name
+                console.log('in parent loop',resp.length)
                 if(name in profile_reports){
-                    for(var j = 0; j < resp[i].reports.length; j++){
+                    for await(var j of Object.keys(resp[i].reports)){
                         var OCR = resp[i].reports[j].OCR
                         var uploaded_at = resp[i].reports[j].uploaded_at
                         var test = body.test
@@ -641,14 +642,12 @@ exports.get_dashboard_data = async function (req, res){
                         }
                     }
                 }else{
-                    console.log('in else', name)
                     profile_reports[name] = []
                     
-                    for(var j = 0; j < resp[i].reports.length; j++){
+                    for await(var j of Object.keys(resp[i].reports)){
                         var OCR = resp[i].reports[j].OCR
                         var uploaded_at = resp[i].reports[j].uploaded_at
-                        console.log(body.test)
-                        
+                        var test = body.test
                         switch(test){
                             case 'hm' :
                                 if (OCR.Haemoglobin) {                                    
@@ -675,10 +674,9 @@ exports.get_dashboard_data = async function (req, res){
                     }
                 }
             }
-            console.log(profile_reports);
             var resp = {
                 status : true,
-                message: 'Data Found',
+                message: 'Data Found 123',
                 data : profile_reports
             }
             console.log('sending rsp',resp);

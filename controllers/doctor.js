@@ -87,7 +87,7 @@ exports.getDoctors= async function (req, res){
                // res.json(result);
            });
           
+           db.close();
    });
-   db.close();
 }
 
