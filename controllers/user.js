@@ -333,9 +333,8 @@ exports.create_profile = async function (req, res) {
 }
 
 exports.get_profile_list = async function (req, res){
-    console.log('get_profile_list called')
-    console.log ('process.env.MONGO_URL',process.env.MONGO_URL)
     var params = JSON.parse(JSON.stringify(req.body));
+    console.log('get_profile_list called',params )
      await validate_user(params.access_token).then(async (response)=>{
         if(response){        
             var uid = response.uid;
