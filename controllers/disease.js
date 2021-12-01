@@ -117,3 +117,34 @@ exports.mergeDisease = async function (req, res){
                 res.json(response);
             }
 }
+
+exports.deleteDisease = async function (req, res) {
+        const {disease} =req.body
+            MongoClient.connect(process.env.MONGO_URL,async function (err, db){
+                if (!err) {
+                    console.log('Connected to DB');
+                }
+                var _db = db.db('care_tracker')
+                const deleteP = await _db.collection('disease').deleteOne(
+                    {
+                        "disease" :disease
+                    }                    
+                    );
+                    console.log(deleteP);
+                    if (deleteP.deletedCount) {   
+                        var result = {'status': true ,message :"Successfully Delete Disease"}
+                        res.status(200);
+                        res.json(result);
+                    }else{
+                        var result = {'status': false, message : " Unable to delete"}
+                        
+                        res.status(200);
+                        res.json(result);
+
+                    }
+                    db.close();
+            })
+}
+
+
+
