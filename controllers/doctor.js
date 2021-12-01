@@ -4,14 +4,8 @@ var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
 var admin = require("firebase-admin");
 var cloudinary = require('cloudinary');
-
-cloudinary.config({ 
-    cloud_name: 'n10eta', 
-    api_key: '153456775719431', 
-    api_secret: 'YM_yp58wr59ojC76EL4uLn3omtA',
-    secure: true
-  });
-
+const { CLOUDINARY_CONFIG, MONGO_URL} = process.env
+cloudinary.config(CLOUDINARY_CONFIG);
 var models = require('../models/models')
 
 async function upload_file (file, folder_name){
@@ -32,7 +26,7 @@ exports.doctorAdd = async function (req, res){
         doctorProPhoto = await upload_file(fileGettingUploaded,'doctor_profile_photos' )
         console.log('fileData', doctorProPhoto)
     
-        MongoClient.connect(process.env.MONGO_URL,async function (err, db){
+        MongoClient.connect(MONGO_URL,async function (err, db){
             if (!err) {
                 console.log('Connected to DB',err);
             }
@@ -72,7 +66,7 @@ exports.doctorAdd = async function (req, res){
 
 
 exports.getDoctors= async function (req, res){
-    MongoClient.connect(process.env.MONGO_URL, async function(err, db) {
+    MongoClient.connect(MONGO_URL, async function(err, db) {
        if (err) throw err;                
        var dbData = db.db('care_tracker')
        const insert = await dbData.collection("users").find({user_type: 'doctor'})
