@@ -18,9 +18,7 @@ var validate = require('./validateUser')
  
 exports.addReqDisease = async function (req, res){
    const {reqDisease,userName}= req.body
-   var params = JSON.parse(JSON.stringify(req.body));
-   await validate.validateUser(params.access_token).then(async (response)=>{
-       if(response){ 
+  
             if (reqDisease){
                 MongoClient.connect(process.env.MONGO_URL,async function (err, db){
                     if (!err) {
@@ -53,16 +51,6 @@ exports.addReqDisease = async function (req, res){
                 }
                 res.json(response);
             }
-        }else{            
-            var resp = {
-                status : false,
-                message: 'Unauthorized access'
-            }
-            res.status(403);
-            res.json(resp);
-        }
-    })
-    
 }
 
 exports.getReqDisease= async function (req, res){
