@@ -51,13 +51,20 @@ exports.payment_success = async function (req, res){
       amount : 1
     }
     var order_details = await models.get_field('razorpay_orders', where ,project)
-    console.log('order_details', order_details)
-    resp = {
-      status : true,
-      data : "Payment Suceess"
+    if(order_details[0].amount == payment.amount){
+      let where = {
+        id :order_id
     }
-    res.status(200);
-    res.json(resp);
+    let data = await instance.orders.fetch(order_id)
+    console.log('data',data);
+    var resp = await models.update_data_set('razorpay_orders', where ,data)
+      resp = {
+        status : true,
+        data : "Payment Verified"
+      }
+      res.status(200);
+      res.json(resp);
+    }
     
   }
 }
