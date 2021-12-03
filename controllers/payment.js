@@ -1,17 +1,29 @@
 require('dotenv').config()
-const { RAZORPAY_CONFIG } = process.env;
+var ObjectId = require('mongodb').ObjectID;
 var Razorpay = require('razorpay')
 var instance = new Razorpay({key_id: 'rzp_test_9hXnb5iQji6JR7',key_secret: 'QUhQn0GJQFHlaOchiDmYfvIH'});
+var models = require('../models/models')     
 exports.make_payment = async function (req, res){
-    const {body} = req;
-    // console.log('body',body)
+    const {doctor_id} = req.body;
+    let where = {
+      _id :ObjectId(doctor_id)
+  }
+  let project = {
+    doctor_fees : 1,
+    user_name : 1
+  }
+  var doctor = await models.get_field('users', where ,project)
+  console.log ('Doctor', doctor)
+  let DocFee = doctor[0].doctor_fees * 100
+  console.log ('Doctor', DocFee)
     var options = {
-        amount: 50000,  // amount in the smallest currency unit
+        amount: DocFee,  // amount in the smallest currency unit
         currency: "INR",
         receipt: "order_rcptid_11"
       };
-      instance.orders.create(options, function(err, order) {
-        console.log(order);
+      instance.orders.create(options, async function(err, order) {
+        var resp = await models.insert_data('razorpay_orders', order)
+        console.log('resp', resp)
         resp = {
             status : true,
             data : {
@@ -24,4 +36,28 @@ exports.make_payment = async function (req, res){
         res.status(200);
         res.json(resp);
       });
+}
+
+exports.payment_success = async function (req, res){
+  const {orderCreationId,razorpayOrderId,razorpayPaymentId,razorpaySignature} = req.body
+  let payment = await instance.payments.fetch(razorpayPaymentId)
+  console.log (payment)
+  if (payment.status == 'captured') {
+    order_id = payment.order_id;
+    let where = {
+      id :order_id
+    }
+    let project = {
+      amount : 1
+    }
+    var order_details = await models.get_field('razorpay_orders', where ,project)
+    console.log('order_details', order_details)
+    resp = {
+      status : true,
+      data : "Payment Suceess"
+    }
+    res.status(200);
+    res.json(resp);
+    
+  }
 }
