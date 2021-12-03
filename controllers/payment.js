@@ -8,7 +8,7 @@ exports.make_payment = async function (req, res){
     const {doctor_id} = req.body;
     let where = {
       _id :ObjectId(doctor_id)
-  }
+    }
   let project = {
     doctor_fees : 1,
     user_name : 1
