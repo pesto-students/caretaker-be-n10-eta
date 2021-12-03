@@ -15,7 +15,7 @@ exports.insert_data =  async function (collection_name, data){
     } else {
         response = false;
     }
-    dbcon.close();
+    db.close();
     return response
 }
 exports.update_data_push =  async function (collection_name, where , data, operation){
@@ -33,7 +33,7 @@ exports.update_data_push =  async function (collection_name, where , data, opera
     } else {
         response = false;
     }
-    dbcon.close();
+    db.close();
     return response
 }
 exports.update_data_set =  async function (collection_name, where , data){
@@ -51,7 +51,7 @@ exports.update_data_set =  async function (collection_name, where , data){
     } else {
         response = false;
     }
-    dbcon.close();
+    db.close();
     return response
 }
 exports.get_field =  async function (collection_name, where , project){
@@ -71,7 +71,7 @@ exports.get_field =  async function (collection_name, where , project){
     } else {
         response = false;
     }
-    dbcon.close();
+    db.close();
     return find
 }
 

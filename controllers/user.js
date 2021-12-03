@@ -1,6 +1,7 @@
 require('dotenv').config()
 var unlink  =  require('fs').unlink;
 const fs = require('fs').promises;
+const fs1 = require('fs');
 var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
 var admin = require("firebase-admin");
@@ -10,8 +11,8 @@ const { RekognitionClient, DetectTextCommand } = require("@aws-sdk/client-rekogn
 const { v1: uuidv1,v4: uuidv4} = require('uuid');
 var aws = require("aws-sdk");
 cloudinary.config(process.env.CLOUDINARY_CONFIG);
-var models = require('../models/models')         
-const {MONGO_URL} = process.env;          
+var models = require('../models/models')
+
 async function validate_user (access_token){
     var resp;
     await admin.auth()
@@ -110,13 +111,12 @@ async function analyze_report (file){
 
 exports.updateAccountDetails = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
-    const {files} = req;
      await validate_user(params.access_token).then(async (response)=>{
         if(response){      
             console.log(response)  
             var uid = response.uid;
             var phone_number = response.phone_number;
-            var fileGettingUploaded = files.profile_photo;
+            var fileGettingUploaded = req.files.profile_photo;
             var file_url = await upload_file(fileGettingUploaded,'profile_photos' )
             // console.log('file_url', file_url)
             if(file_url){
@@ -129,8 +129,8 @@ exports.updateAccountDetails = async function (req, res){
                         "phone_number": phone_number
                     }, {
                         $set: {
-                            user_name :params.user_name,
-                            user_email : params.user_email, 
+                            user_name : req.body.user_name,
+                            user_email : req.body.user_email, 
                             user_photo : file_url,
                             user_status : 'old'
                         }
@@ -171,12 +171,12 @@ exports.updateAccountDetails = async function (req, res){
 
 exports.getUser_details = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
-    const {MONGO_URL} = process.env;
      await validate_user(params.access_token).then(async (response)=>{
+        console.log('KAPIL',response)
         if(response){        
             var uid = response.uid;
             var phone_number = response.phone_number;            
-            MongoClient.connect(MONGO_URL,async function (err, db){
+            MongoClient.connect(process.env.MONGO_URL,async function (err, db){
                 if (!err) {
                     console.log('Connected to DB');
                 }
@@ -213,8 +213,7 @@ exports.getUser_details = async function (req, res){
 }
 
 exports.create_profile = async function (req, res) {
-    var params = JSON.parse(JSON.stringify(req.body));    
-    const {MONGO_URL} = process.env;
+    var params = JSON.parse(JSON.stringify(req.body));
      await validate_user(params.access_token).then(async (response)=>{
         if(response){        
             var uid = response.uid;
@@ -222,25 +221,28 @@ exports.create_profile = async function (req, res) {
             var reports = [];
             var reports_ocr = [];
               if (req.files && Object.keys(req.files).length != 0) {
-                  const {reports} = req.files;
-                if (reports && Object.keys(reports).length != 0)
+                if (req.files.reports && Object.keys(req.files.reports).length != 0)
                 {
-                    for(var index of Object.keys(reports)) {
-                      const file = reports[index];
+                    console.log(Object.keys(req.files.reports).length, 'reports length')
+                    // (var index of Object.keys(req.files.reports)
+                    for(var index of Object.keys(req.files.reports)) {
+                      const file = req.files.reports[index];
                       var file_url = await upload_file(file,'reports')
                       var analyze_report_resp = await analyze_report(file);
+                        console.log('report123', analyze_report_resp);
                         var datetime = new Date();
                         var temp = {
                             file_url : file_url,
                             OCR : analyze_report_resp,
                             uploaded_at : datetime
                         }
-                      reports.push(temp);                                     
+                      reports.push(temp);                    
+                    //   reports_ocr.push(analyze_report_resp);                    
                     }
                 }
             }
             
-            MongoClient.connect(MONGO_URL, function(err, db) {
+            MongoClient.connect(process.env.MONGO_URL, function(err, db) {
                 if (err) throw err;
                 var dbData = db.db('care_tracker')
                 var obj={
@@ -278,14 +280,14 @@ exports.create_profile = async function (req, res) {
                             }                         
                             console.log('QR code generated')
                             var qrlink = await upload_local_file(filepath,'qrcodes') 
-                            MongoClient.connect(MONGO_URL,async function (err, db){
+                            MongoClient.connect(process.env.MONGO_URL,async function (err, db){
                                 var _db = db.db('care_tracker')
                                 var ObjectId = require('mongodb').ObjectID;
                                 var profile_photo = ""
                                 if (req.files && Object.keys(req.files).length != 0) {
-                                    const { profile_photo} = req.files;
-                                    if(profile_photo){
-                                        var fileGettingUploaded = profile_photo;
+                                
+                                    if(req.files.profile_photo){
+                                        var fileGettingUploaded = req.files.profile_photo;
                                         profile_photo = await upload_file(fileGettingUploaded,'profile_photos' )
                                     }
                                 }
@@ -325,19 +327,20 @@ exports.create_profile = async function (req, res) {
             }
             res.status(401);
             res.json(resp);
+            console.log ("in else")
         }
     });
 }
 
 exports.get_profile_list = async function (req, res){
+    console.log('get_profile_list called')
+    console.log ('process.env.MONGO_URL',process.env.MONGO_URL)
     var params = JSON.parse(JSON.stringify(req.body));
-    console.log('get_profile_list called',params )
      await validate_user(params.access_token).then(async (response)=>{
         if(response){        
             var uid = response.uid;
             var phone_number = response.phone_number;            
-            const {MONGO_URL} = process.env;            
-            MongoClient.connect(MONGO_URL, async function(err, db) {
+            MongoClient.connect(process.env.MONGO_URL, async function(err, db) {
                 if (err) throw err;                
                 var dbData = db.db('care_tracker')
                 const insert = await dbData.collection("profiles").find({userNumber: phone_number})
@@ -369,10 +372,13 @@ exports.delete_profile = async function (req, res) {
     await validate_user(params.access_token).then(async (response)=>{
         if(response){        
             var uid = response.uid;
-            var profile_id = params.profile_id;                   
-            const {MONGO_URL} = process.env;            
-            MongoClient.connect(MONGO_URL,async function (err, db){
+            var profile_id = params.profile_id;
+            MongoClient.connect(process.env.MONGO_URL,async function (err, db){
+                if (!err) {
+                    console.log('Connected to DB');
+                }
                 var _db = db.db('care_tracker')
+                // var ObjectId = require('mongodb').ObjectID;
                 const deleteP = await _db.collection('profiles').deleteOne(
                     {
                         "_id": ObjectId(profile_id)
@@ -405,7 +411,7 @@ exports.delete_profile = async function (req, res) {
 exports.get_emergency_details = async function (req, res){    
     var params = JSON.parse(JSON.stringify(req.body));
     var profile_id = params.pid;
-    MongoClient.connect(MONGO_URL,async function (err, db){
+    MongoClient.connect(process.env.MONGO_URL,async function (err, db){
         if (!err) {
             console.log('Connected to DB');
         }
@@ -438,7 +444,7 @@ exports.get_emergency_details = async function (req, res){
 
 exports.upload_report = async function (req, res){
     const { body , files} = req;
-    console.log(files)
+    console.log(body.pid)
     await validate_user(body.access_token).then(async (response)=>{
         if(response){    
             var uid = response.uid;
@@ -589,6 +595,7 @@ exports.get_dashboard_data = async function (req, res){
     await validate_user(body.access_token).then(async (response)=>{
         if(response){    
             var uid = response.uid;
+            // var phone_number = '+919999999999';  
             var phone_number = response.phone_number;  
             console.log(phone_number)
             var where = {
@@ -600,12 +607,11 @@ exports.get_dashboard_data = async function (req, res){
             }
             var resp = await models.get_field('profiles', where ,project)
             console.log('resp',resp.length);
-            var profile_reports ={};
-            for await(var i of Object.keys(resp)){
+            var profile_reports =[];
+            for (var i = 0; i< resp.length; i++){
                 let name = resp[i].profile_details.name
-                console.log('in parent loop',resp.length)
                 if(name in profile_reports){
-                    for await(var j of Object.keys(resp[i].reports)){
+                    for(var j = 0; j < resp[i].reports.length; j++){
                         var OCR = resp[i].reports[j].OCR
                         var uploaded_at = resp[i].reports[j].uploaded_at
                         var test = body.test
@@ -635,12 +641,14 @@ exports.get_dashboard_data = async function (req, res){
                         }
                     }
                 }else{
+                    console.log('in else', name)
                     profile_reports[name] = []
                     
-                    for await(var j of Object.keys(resp[i].reports)){
+                    for(var j = 0; j < resp[i].reports.length; j++){
                         var OCR = resp[i].reports[j].OCR
                         var uploaded_at = resp[i].reports[j].uploaded_at
-                        var test = body.test
+                        console.log(body.test)
+                        
                         switch(test){
                             case 'hm' :
                                 if (OCR.Haemoglobin) {                                    
@@ -667,9 +675,10 @@ exports.get_dashboard_data = async function (req, res){
                     }
                 }
             }
+            console.log(profile_reports);
             var resp = {
                 status : true,
-                message: 'Data Found 123',
+                message: 'Data Found',
                 data : profile_reports
             }
             console.log('sending rsp',resp);
