@@ -16,6 +16,7 @@ exports.make_payment = async function (req, res){
             status : true,
             data : {
                 order_id : order.id,
+                amount : order.amount,
                 all_data : order
             }
         }
