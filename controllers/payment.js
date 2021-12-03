@@ -1,7 +1,8 @@
 require('dotenv').config()
 var ObjectId = require('mongodb').ObjectID;
 var Razorpay = require('razorpay')
-var instance = new Razorpay({key_id: 'rzp_test_9hXnb5iQji6JR7',key_secret: 'QUhQn0GJQFHlaOchiDmYfvIH'});
+const {RAZORPAY_SECRET, RAZORPAY_KEY} = process.env
+var instance = new Razorpay({key_id: RAZORPAY_KEY,key_secret: RAZORPAY_SECRET});
 var models = require('../models/models')     
 exports.make_payment = async function (req, res){
     const {doctor_id} = req.body;
