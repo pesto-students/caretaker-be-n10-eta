@@ -28,7 +28,8 @@ exports.doctor_unset_meeting = async function (req, res){
       }
     let data = {
         meetingId : '',
-        roomName : ''
+        roomName : '',
+        available : false,
     }
     var resp = await models.update_data_set('users', where ,data)
     resp = {
