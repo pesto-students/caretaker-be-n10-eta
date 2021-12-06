@@ -10,7 +10,7 @@ exports.doctor_meeting_details = async function (req, res){
     let data = {
         meetingId : meetingId,
         roomName : roomName,
-        available : false,
+        available : true,
     }
     var resp = await models.update_data_set('users', where ,data)
     resp = {
