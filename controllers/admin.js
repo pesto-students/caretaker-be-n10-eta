@@ -23,8 +23,12 @@ exports.getAdminDetails= async  (req, res)=>{
       const countDisease = await dbData.collection("disease").count()
        const countDoctor = await dbData.collection("users").find({user_type: 'doctor'}).count()
        const countUser = await dbData.collection("users").find({user_type: 'user'}).count()
-      
-       var response = {'status': true, 'doctor' : countDoctor, 'users':countUser, 'disease': countDisease}
+      let data = {
+        'doctor' : countDoctor,
+        'users':countUser, 
+        'disease': countDisease
+      }
+       var response = {'status': true,'data':data }
        res.json(response); 
        db.close();      
    });
