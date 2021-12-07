@@ -465,7 +465,7 @@ exports.upload_report = async function (req, res){
                 for (var key of Object.keys(reports)) {
                     console.log(reports[key])
                     let where = {
-                        userNumber :phone_number
+                        _id :ObjectId(body.pid)
                     }
                     let data = {
                         reports : reports[key]
