@@ -40,3 +40,37 @@ exports.doctor_unset_meeting = async function (req, res){
       res.json(resp);
     res.status(200);
 }
+
+exports.user_join_meetings = async function (req, res){
+    const {access_token, doctor_id, user_id } = req.body
+    let where = {
+        _id  :ObjectId(doctor_id)
+      }
+    let data = {
+        available : false,
+    }
+    var resp = await models.update_data_set('users', where ,data)
+    resp = {
+        status : true,
+        data : "Details Updated in DB"
+      }
+      res.json(resp);
+    res.status(200);
+}
+
+exports.user_leave_meetings = async function (req, res){
+    const {access_token, doctor_id, user_id } = req.body
+    let where = {
+        _id  :ObjectId(doctor_id)
+      }
+    let data = {
+        available : true,
+    }
+    var resp = await models.update_data_set('users', where ,data)
+    resp = {
+        status : true,
+        data : "Details Updated in DB"
+      }
+      res.json(resp);
+    res.status(200);
+}
