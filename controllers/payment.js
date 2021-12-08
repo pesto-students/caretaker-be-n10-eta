@@ -3,7 +3,10 @@ var ObjectId = require('mongodb').ObjectID;
 var Razorpay = require('razorpay')
 const {RAZORPAY_SECRET, RAZORPAY_KEY} = process.env
 var instance = new Razorpay({key_id: RAZORPAY_KEY,key_secret: RAZORPAY_SECRET});
-var models = require('../models/models')     
+var models = require('../models/models')  
+var consts= require('../constants/constants')
+const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION,RAZORPAY_ORDERS_COLLECTION}= consts.constants
+
 exports.make_payment = async function (req, res){
     const {doctor_id} = req.body;
     let where = {
@@ -13,7 +16,7 @@ exports.make_payment = async function (req, res){
     doctor_fees : 1,
     user_name : 1
   }
-  var doctor = await models.get_field('users', where ,project)
+  var doctor = await models.get_field(USERS_COLLECTION, where ,project)
   console.log ('Doctor', doctor)
   let DocFee = doctor[0].doctor_fees * 100
   console.log ('Doctor', DocFee)
@@ -23,7 +26,7 @@ exports.make_payment = async function (req, res){
         receipt: "order_rcptid_11"
       };
       instance.orders.create(options, async function(err, order) {
-        var resp = await models.insert_data('razorpay_orders', order)
+        var resp = await models.insert_data(RAZORPAY_ORDERS_COLLECTION, order)
         console.log('resp', resp)
         resp = {
             status : true,
@@ -51,14 +54,14 @@ exports.payment_success = async function (req, res){
     let project = {
       amount : 1
     }
-    var order_details = await models.get_field('razorpay_orders', where ,project)
+    var order_details = await models.get_field(RAZORPAY_ORDERS_COLLECTION, where ,project)
     if(order_details[0].amount == payment.amount){
       let where = {
         id  :order_id
       }
     let data = await instance.orders.fetch(order_id)
     console.log('data',data);
-    var resp = await models.update_data_set('razorpay_orders', where ,data)
+    var resp = await models.update_data_set(RAZORPAY_ORDERS_COLLECTION, where ,data)
       resp = {
         status : true,
         data : "Payment Verified"

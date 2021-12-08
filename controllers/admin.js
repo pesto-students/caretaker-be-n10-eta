@@ -4,15 +4,17 @@ var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
  
 var models = require('../models/models')
+var consts= require('../constants/constants')
+const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION}= consts.constants
 
 
 exports.getAdminDetails= async  (req, res)=>{
     MongoClient.connect(process.env.MONGO_URL, async function(err, db) {
        if (err) throw err;                
-       var dbData = db.db('care_tracker')
-      const countDisease = await dbData.collection("disease").count()
-       const countDoctor = await dbData.collection("users").find({user_type: 'doctor'}).count()
-       const countUser = await dbData.collection("users").find({user_type: 'user'}).count()
+       var dbData = db.db(DATABASE_NAME)
+      const countDisease = await dbData.collection(DISEASE_COLLECTION).count()
+       const countDoctor = await dbData.collection(USERS_COLLECTION).find({user_type: 'doctor'}).count()
+       const countUser = await dbData.collection(USERS_COLLECTION).find({user_type: 'user'}).count()
       let data = {
         'doctor' : countDoctor,
         'users':countUser, 

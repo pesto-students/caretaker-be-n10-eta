@@ -1,9 +1,12 @@
 require('dotenv').config()
 var ObjectId = require('mongodb').ObjectID;
 var models = require('../models/models')     
+var consts= require('../constants/constants')
+const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION}= consts.constants
+
+
 exports.doctor_meeting_details = async function (req, res){
     const {access_token, roomName, meetingId,doctor_id } = req.body
-    console.log('meeting Details', doctor_id)
     let where = {
         _id  :ObjectId(doctor_id)
       }
@@ -12,7 +15,7 @@ exports.doctor_meeting_details = async function (req, res){
         roomName : roomName,
         available : true,
     }
-    var resp = await models.update_data_set('users', where ,data)
+    var resp = await models.update_data_set(USERS_COLLECTION, where ,data)
     resp = {
         status : true,
         data : "Details Updated in DB"
@@ -32,7 +35,7 @@ exports.doctor_unset_meeting = async function (req, res){
         roomName : '',
         available : false,
     }
-    var resp = await models.update_data_set('users', where ,data)
+    var resp = await models.update_data_set(USERS_COLLECTION, where ,data)
     resp = {
         status : true,
         data : "Details Updated in DB"
@@ -49,7 +52,7 @@ exports.user_join_meetings = async function (req, res){
     let data = {
         available : false,
     }
-    var resp = await models.update_data_set('users', where ,data)
+    var resp = await models.update_data_set(USERS_COLLECTION, where ,data)
     resp = {
         status : true,
         data : "Details Updated in DB"
@@ -66,7 +69,7 @@ exports.user_leave_meetings = async function (req, res){
     let data = {
         available : true,
     }
-    var resp = await models.update_data_set('users', where ,data)
+    var resp = await models.update_data_set(USERS_COLLECTION, where ,data)
     resp = {
         status : true,
         data : "Details Updated in DB"
