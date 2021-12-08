@@ -89,7 +89,7 @@ async function analyze_report (file){
             console.log( response.TextDetections[key].DetectedText )
             nextIndex =parseInt(key) +1
             rbc = response.TextDetections[nextIndex].DetectedText
-            console.log( rbc )
+             console.log( rbc )
         }
         if(text == "Total WBC Count" && type == "LINE"){
             console.log( response.TextDetections[key].DetectedText )
