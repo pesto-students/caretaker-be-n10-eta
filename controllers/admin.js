@@ -21,7 +21,7 @@ exports.getAdminDetails= async  (req, res)=>{
       const stats = [
         { title: "Users", count: countUser, id: 0 },
         { title: "Doctors", count: countDoctor, id: 1 },
-        { title: "Disease", countDisease: 15, id: 2 },
+        { title: "Disease", count: 15, id: 2 },
       ];
        var response = {'status': true,'data':stats }
        res.json(response); 
