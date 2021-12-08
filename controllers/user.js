@@ -11,7 +11,11 @@ const { v1: uuidv1,v4: uuidv4} = require('uuid');
 var aws = require("aws-sdk");
 cloudinary.config(process.env.CLOUDINARY_CONFIG);
 var models = require('../models/models')         
-const {MONGO_URL} = process.env;          
+const {MONGO_URL} = process.env;  
+var consts= require('../constants/constants')
+const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION}= consts.constants
+
+
 async function validate_user (access_token){
     var resp;
     await admin.auth()
@@ -20,8 +24,7 @@ async function validate_user (access_token){
         resp = decodedToken
     })
     .catch((error) => {
-        console.log(error)     
-        console.log("authentication failed in validate user")     
+        console.log(error)       
         resp =  false;
     });
     return resp;
@@ -49,14 +52,11 @@ async function upload_local_file (file, folder_name){
 
 async function analyze_report (file){
     var image;
-    console.log('analyze_report called')
     var xyz = await fs.readFile(file.tempFilePath)
     s3 = new aws.S3({apiVersion: '2006-03-01'});
     image = uuidv4()+file.name
     var params123 = {Bucket: 'caretrackerreports', Key: image, Body: xyz};
-    // console.log('before upload',params123);
     var upload = await s3.upload(params123,async function(err, data1) {
-        console.log('upload to s3 data', data1,err)
         return data1;
     }).promise()
     const client = new RekognitionClient({ region: "ap-south-1"});
@@ -80,22 +80,16 @@ async function analyze_report (file){
         var text = response.TextDetections[key].DetectedText;
         var type = response.TextDetections[key].Type;
         if(text == "Haemoglobin" && type == "LINE"){
-            console.log( response.TextDetections[key].DetectedText )
             nextIndex =parseInt(key) +1
             Haemoglobin = response.TextDetections[nextIndex].DetectedText
-            console.log( Haemoglobin )
         }
         if(text == "Total RBC Count" && type == "LINE"){
-            console.log( response.TextDetections[key].DetectedText )
             nextIndex =parseInt(key) +1
             rbc = response.TextDetections[nextIndex].DetectedText
-            console.log( rbc )
         }
         if(text == "Total WBC Count" && type == "LINE"){
-            console.log( response.TextDetections[key].DetectedText )
             nextIndex =parseInt(key) +1
             wbc = response.TextDetections[nextIndex].DetectedText
-            console.log( wbc )
         }
         data = {
             Haemoglobin:Haemoglobin,
@@ -104,8 +98,6 @@ async function analyze_report (file){
         }
     }
     return data
-    // return '321'
-    // return '321'
 }
 
 exports.updateAccountDetails = async function (req, res){
@@ -113,19 +105,17 @@ exports.updateAccountDetails = async function (req, res){
     const {files} = req;
      await validate_user(params.access_token).then(async (response)=>{
         if(response){      
-            console.log(response)  
             var uid = response.uid;
             var phone_number = response.phone_number;
             var fileGettingUploaded = files.profile_photo;
             var file_url = await upload_file(fileGettingUploaded,'profile_photos' )
-            // console.log('file_url', file_url)
             if(file_url){
                 MongoClient.connect(process.env.MONGO_URL,async function (err, db){
                     if (err) {
                         console.log('DB error', err);
                     }
-                    var _db = db.db('care_tracker')
-                    const update = await _db.collection('users').updateOne({
+                    var _db = db.db(DATABASE_NAME)
+                    const update = await _db.collection(USERS_COLLECTION).updateOne({
                         "phone_number": phone_number
                     }, {
                         $set: {
@@ -136,7 +126,6 @@ exports.updateAccountDetails = async function (req, res){
                         }
                     });
                     db.close();
-                    console.log('update',uid)
                     var response;
                     if (update.acknowledged) {
                         response = {'status': true}                        
@@ -163,7 +152,6 @@ exports.updateAccountDetails = async function (req, res){
             }
             res.status(401);
             res.json(resp);
-            console.log ("in else")
         }
     })
 
@@ -177,13 +165,12 @@ exports.getUser_details = async function (req, res){
             var uid = response.uid;
             var phone_number = response.phone_number;            
             MongoClient.connect(MONGO_URL,async function (err, db){
-                if (!err) {
-                    console.log('Connected to DB');
+                if (err) {
+                    console.log('Error DB',err);
                 }
-                var _db = db.db('care_tracker')
+                var _db = db.db(DATABASE_NAME)
                 var search_result;
-                const search = await _db.collection("users").findOne({phone_number:phone_number})
-                console.log('search result',search)
+                const search = await _db.collection(USERS_COLLECTION).findOne({phone_number:phone_number})
                 var response;
                 if (search) {
                     response = {'status': true,
@@ -207,7 +194,6 @@ exports.getUser_details = async function (req, res){
             }
             res.status(401);
             res.json(resp);
-            console.log ("in else")
         }
     })
 }
@@ -242,7 +228,7 @@ exports.create_profile = async function (req, res) {
             
             MongoClient.connect(MONGO_URL, function(err, db) {
                 if (err) throw err;
-                var dbData = db.db('care_tracker')
+                var dbData = db.db(DATABASE_NAME)
                 var obj={
                     name : params.name,
                     age : params.age,
@@ -251,12 +237,10 @@ exports.create_profile = async function (req, res) {
                     gender : params.gender,
                     emergency_contact : params.emergency_contact,                    
                 }
-                //if (req.body.uuid_fb==null){}
-                dbData.collection("profiles").insertOne({ user_fb_uid: uid,                 
+                dbData.collection(PROFILES_COLLECTION).insertOne({ user_fb_uid: uid,                 
                     userNumber: phone_number,
                     profile_details :obj,
                     reports : reports, 
-                    reports_ocr : reports_ocr, 
                     profile_status : 1, 
                     profile_photo : "",
                     qr_code : ""
@@ -276,10 +260,9 @@ exports.create_profile = async function (req, res) {
                             if (err){
                                 console.log(err)                                 
                             }                         
-                            console.log('QR code generated')
                             var qrlink = await upload_local_file(filepath,'qrcodes') 
                             MongoClient.connect(MONGO_URL,async function (err, db){
-                                var _db = db.db('care_tracker')
+                                var _db = db.db(DATABASE_NAME)
                                 var ObjectId = require('mongodb').ObjectID;
                                 var profile_photo = ""
                                 if (req.files && Object.keys(req.files).length != 0) {
@@ -289,7 +272,7 @@ exports.create_profile = async function (req, res) {
                                         profile_photo = await upload_file(fileGettingUploaded,'profile_photos' )
                                     }
                                 }
-                               const update = await _db.collection('profiles').updateOne({
+                               const update = await _db.collection(PROFILES_COLLECTION).updateOne({
                                 "_id": result.insertedId
                                 }, {
                                     $set: {
@@ -297,10 +280,8 @@ exports.create_profile = async function (req, res) {
                                         profile_photo : profile_photo
                                     }
                                 });
-                                console.log('QR code generated updated in db')
                                 unlink(filepath, (err) => {
                                     if (err) throw err;
-                                    console.log('successfully deleted ',filepath);
                                   });
                             })
                         })
@@ -331,7 +312,6 @@ exports.create_profile = async function (req, res) {
 
 exports.get_profile_list = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
-    console.log('get_profile_list called',params )
      await validate_user(params.access_token).then(async (response)=>{
         if(response){        
             var uid = response.uid;
@@ -339,8 +319,8 @@ exports.get_profile_list = async function (req, res){
             const {MONGO_URL} = process.env;            
             MongoClient.connect(MONGO_URL, async function(err, db) {
                 if (err) throw err;                
-                var dbData = db.db('care_tracker')
-                const insert = await dbData.collection("profiles").find({userNumber: phone_number})
+                var dbData = db.db(DATABASE_NAME)
+                const insert = await dbData.collection(PROFILES_COLLECTION).find({userNumber: phone_number})
                     .toArray(function (err, result) {
                         if (err) throw err;
                         var resp = {
@@ -349,7 +329,6 @@ exports.get_profile_list = async function (req, res){
                         }
                         res.status(200);
                         res.json(resp);
-                        // res.json(result);
                     });               
             });
         }else{            
@@ -359,7 +338,6 @@ exports.get_profile_list = async function (req, res){
             }
             res.status(401);
             res.json(resp);
-            console.log ("in else")
         }
     });
 }
@@ -372,13 +350,12 @@ exports.delete_profile = async function (req, res) {
             var profile_id = params.profile_id;                   
             const {MONGO_URL} = process.env;            
             MongoClient.connect(MONGO_URL,async function (err, db){
-                var _db = db.db('care_tracker')
-                const deleteP = await _db.collection('profiles').deleteOne(
+                var _db = db.db(DATABASE_NAME)
+                const deleteP = await _db.collection(PROFILES_COLLECTION).deleteOne(
                     {
                         "_id": ObjectId(profile_id)
                     }                    
                     );
-                    console.log(deleteP);
                     if (deleteP.deletedCount) {                        
                         var result = {'status': true}
                         res.status(200);
@@ -397,7 +374,6 @@ exports.delete_profile = async function (req, res) {
             }
             res.status(401);
             res.json(resp);
-            console.log ("in else")
         }
     })
 }
@@ -406,18 +382,16 @@ exports.get_emergency_details = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
     var profile_id = params.pid;
     MongoClient.connect(MONGO_URL,async function (err, db){
-        if (!err) {
-            console.log('Connected to DB');
+        if (err) {
+            console.log('DB error', err);
         }
-        var _db = db.db('care_tracker')
-        // var ObjectId = require('mongodb').ObjectID;
-        const details = await _db.collection('profiles').findOne(
+        var _db = db.db(DATABASE_NAME)
+        const details = await _db.collection(PROFILES_COLLECTION).findOne(
             {
                 "_id": ObjectId(profile_id)
             }
             
             );
-            console.log('profile_id',profile_id);
             if (details) {
                 
                 var result = {'status': true,
@@ -438,7 +412,6 @@ exports.get_emergency_details = async function (req, res){
 
 exports.upload_report = async function (req, res){
     const { body , files} = req;
-    console.log(files)
     await validate_user(body.access_token).then(async (response)=>{
         if(response){    
             var uid = response.uid;
@@ -446,32 +419,26 @@ exports.upload_report = async function (req, res){
             var reports = [];      
             if (files.reports && Object.keys(files.reports).length != 0)
             {
-                console.log(Object.keys(req.files.reports).length, 'reports length')
-                // (var index of Object.keys(req.files.reports)
                 for(var index of Object.keys(req.files.reports)) {
                   const file = req.files.reports[index];
                   var file_url = await upload_file(file,'reports')
                   var analyze_report_resp = await analyze_report(file);
-                    console.log('report123', analyze_report_resp);
                     var datetime = new Date();
                     var temp = {
                         file_url : file_url,
                         OCR : analyze_report_resp,
                         uploaded_at : datetime
                     }
-                  reports.push(temp);      
-                  //   reports_ocr.push(analyze_report_resp);                    
+                  reports.push(temp);                        
                 }
                 for (var key of Object.keys(reports)) {
-                    console.log(reports[key])
                     let where = {
-                        userNumber :phone_number
+                        _id :ObjectId(body.pid)
                     }
                     let data = {
                         reports : reports[key]
                     }
-                    var resp = await models.update_data_push('profiles', where ,data)
-                    console.log('resp',resp);     
+                    var resp = await models.update_data_push(PROFILES_COLLECTION, where ,data)
                     if(!resp){
                         var resp = {
                             status : false,
@@ -500,20 +467,17 @@ exports.upload_report = async function (req, res){
 }
 exports.get_report = async function (req, res){
     const { body , files} = req;
-    console.log(body.pid)
     await validate_user(body.access_token).then(async (response)=>{
         if(response){    
             var uid = response.uid;
             var phone_number = response.phone_number;  
-            // var phone_number = '+919999999999';  
             let where = {
                 _id :ObjectId(body.pid)
             }
             let project = {
                 reports : 1
             }
-            var resp = await models.get_field('profiles', where ,project)
-            console.log('resp',resp[0].reports); 
+            var resp = await models.get_field(PROFILES_COLLECTION, where ,project)
             if (resp[0].reports) {
                 var resp = {
                     status : true,
@@ -542,7 +506,6 @@ exports.get_report = async function (req, res){
 }
 exports.update_profile = async function (req, res){
     const { body , files} = req;
-    console.log(body.pid)
     await validate_user(body.access_token).then(async (response)=>{
         if(response){    
             var uid = response.uid;
@@ -557,7 +520,7 @@ exports.update_profile = async function (req, res){
                 'profile_details.blood_group' : body.blood_group,
                 'profile_details.emergency_contact' : body.emergency_contact,
             }
-            var resp = await models.update_data_set('profiles', where ,data)
+            var resp = await models.update_data_set(PROFILES_COLLECTION, where ,data)
             if(!resp){
                 var resp = {
                     status : false,
@@ -590,7 +553,6 @@ exports.get_dashboard_data = async function (req, res){
         if(response){    
             var uid = response.uid;
             var phone_number = response.phone_number;  
-            console.log(phone_number)
             var where = {
                 userNumber : phone_number
             }            
@@ -598,18 +560,15 @@ exports.get_dashboard_data = async function (req, res){
                 reports : 1,
                 profile_details : 1
             }
-            var resp = await models.get_field('profiles', where ,project)
-            console.log('resp',resp.length);
+            var resp = await models.get_field(PROFILES_COLLECTION, where ,project)
             var profile_reports ={};
             for await(var i of Object.keys(resp)){
                 let name = resp[i].profile_details.name
-                console.log('in parent loop',resp.length)
                 if(name in profile_reports){
                     for await(var j of Object.keys(resp[i].reports)){
                         var OCR = resp[i].reports[j].OCR
                         var uploaded_at = resp[i].reports[j].uploaded_at
                         var test = body.test
-                        console.log(test);
                         switch(test){
                             case 'hm' :
                                 if (OCR.Haemoglobin) {                                    
@@ -672,7 +631,6 @@ exports.get_dashboard_data = async function (req, res){
                 message: 'Data Found 123',
                 data : profile_reports
             }
-            console.log('sending rsp',resp);
             res.status(200);
             res.json(resp);
         }else{

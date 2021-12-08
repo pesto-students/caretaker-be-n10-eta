@@ -7,6 +7,8 @@ var cloudinary = require('cloudinary');
 const { CLOUDINARY_CONFIG, MONGO_URL} = process.env
 cloudinary.config(CLOUDINARY_CONFIG);
 var models = require('../models/models')
+var consts= require('../constants/constants')
+const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION}= consts.constants
 
 async function upload_file (file, folder_name){
     var file_url;
@@ -30,15 +32,15 @@ exports.doctorAdd = async function (req, res){
             if (!err) {
                 console.log('Connected to DB',err);
             }
-            var _db = db.db('care_tracker')
-            var searchNumber =await _db.collection("users").findOne({'phone_number' :phone_number}, async function(err, result) {
+            var _db = db.db(DATABASE_NAME)
+            var searchNumber =await _db.collection(USERS_COLLECTION).findOne({'phone_number' :phone_number}, async function(err, result) {
             if (err) throw err;
             console.log(result);
             if(result){ 
                 var response = {'status': false, message : "User Arealdy Exists with Number"}
                 res.json(response);
              }else{
-                await _db.collection('users').insertOne({
+                await _db.collection(USERS_COLLECTION).insertOne({
                     user_name :user_name,
                     phone_number : phone_number,
                     user_type : "doctor",
@@ -68,8 +70,8 @@ exports.doctorAdd = async function (req, res){
 exports.getDoctors= async function (req, res){
     MongoClient.connect(MONGO_URL, async function(err, db) {
        if (err) throw err;                
-       var dbData = db.db('care_tracker')
-       const insert = await dbData.collection("users").find({user_type: 'doctor'})
+       var dbData = db.db(DATABASE_NAME)
+       const insert = await dbData.collection(USERS_COLLECTION).find({user_type: 'doctor'})
            .toArray(function (err, result) {
                if (err) throw err;
                var resp = {
@@ -78,7 +80,7 @@ exports.getDoctors= async function (req, res){
                }
                res.status(200);
                res.json(resp);
-               // res.json(result);
+                
            });
           
            db.close();

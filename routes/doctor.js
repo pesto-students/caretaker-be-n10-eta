@@ -7,6 +7,5 @@ var doctor = require('../controllers/doctor')
 
 router.get('/get-doctors', doctor.getDoctors);
 router.post('/doctor-add', doctor.doctorAdd);
-//router.get('/get-admin',doctor.getAdminDetails)
 
 module.exports = router;
