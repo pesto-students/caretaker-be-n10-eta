@@ -256,7 +256,6 @@ exports.create_profile = async function (req, res) {
                     userNumber: phone_number,
                     profile_details :obj,
                     reports : reports, 
-                    reports_ocr : reports_ocr, 
                     profile_status : 1, 
                     profile_photo : "",
                     qr_code : ""
