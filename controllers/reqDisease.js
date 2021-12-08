@@ -57,7 +57,7 @@ exports.getReqDisease= async function (req, res){
                }
                res.status(200);
                res.json(resp);
-               // res.json(result);
+               
            });
            db.close();
       

@@ -9,15 +9,7 @@ cloudinary.config(CLOUDINARY_CONFIG);
 
 var models = require('../models/models')
 
-async function upload_file (file, folder_name){
-    var file_url;
-    await cloudinary.uploader.upload(file.tempFilePath,  function(error, result) { file_url = error.url}, {
-        folder: folder_name,
-        use_filename: true,
-        unique_filename : true,
-        });
-    return file_url;
-}
+ 
 
 exports.addDisease = async function (req, res){
     if (req.body.disease){
@@ -40,7 +32,7 @@ exports.addDisease = async function (req, res){
                 res.json(response);
              }
              })
-             //db.close();
+            
         })
           db.close();
     }else{                   
@@ -67,7 +59,7 @@ exports.getDisease= async function (req, res){
                }
                res.status(200);
                res.json(resp);
-               // res.json(result);
+             
            });
            db.close();
       
@@ -94,20 +86,20 @@ exports.mergeDisease = async function (req, res){
                    
                     var response;
                     if (update.acknowledged) {
-                        response = {'status': true}                        
+                        response = {'status': true , message :"Successfully Merge Disease"}                        
                     }else{
                         response = {
                             status : false,
                             message : "Merge Failed"
                         }
                     }
-                    //db.close(); 
+                   
                     res.json(response);
                 })
             }else{                   
                 var response = {
                     status : false,
-                    message : "File upload Failed"
+                    message : "Invalid data"
                 }
                 res.json(response);
             }

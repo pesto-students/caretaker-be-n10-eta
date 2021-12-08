@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" ",
+    "test": "./node_modules/.bin/mocha",
     "start": "node index.js"
   },
   "author": "",
@@ -28,5 +28,11 @@
     "razorpay": "^2.8.0",
     "util": "^0.12.4",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
+    "deep-equal-in-any-order": "^1.1.15",
+    "mocha": "^9.1.3"
   }
 }
