@@ -205,13 +205,13 @@ exports.create_profile = async function (req, res) {
         if(response){        
             var uid = response.uid;
             var phone_number = response.phone_number;
-            var reports = [];
+            var reports_upload = [];
             var reports_ocr = [];
               if (req.files && Object.keys(req.files).length != 0) {
                   const {reports} = req.files;
                 if (reports && Object.keys(reports).length != 0)
                 {
-                    for(var index of Object.keys(reports)) {
+                    for await(var index of Object.keys(reports)) {
                       const file = reports[index];
                       var file_url = await upload_file(file,'reports')
                       var analyze_report_resp = await analyze_report(file);
@@ -221,7 +221,7 @@ exports.create_profile = async function (req, res) {
                             OCR : analyze_report_resp,
                             uploaded_at : datetime
                         }
-                      reports.push(temp);                                     
+                        reports_upload.push(temp);                                     
                     }
                 }
             }
@@ -240,7 +240,7 @@ exports.create_profile = async function (req, res) {
                 dbData.collection(PROFILES_COLLECTION).insertOne({ user_fb_uid: uid,                 
                     userNumber: phone_number,
                     profile_details :obj,
-                    reports : reports, 
+                    reports : reports_upload, 
                     profile_status : 1, 
                     profile_photo : "",
                     qr_code : ""
