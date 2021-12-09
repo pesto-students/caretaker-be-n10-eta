@@ -109,7 +109,6 @@ exports.updateAccountDetails = async function (req, res){
             var phone_number = response.phone_number;
             // var fileGettingUploaded = files.profile_photo;
             // var file_url = await upload_file(fileGettingUploaded,'profile_photos' )
-            if(file_url){
                 MongoClient.connect(process.env.MONGO_URL,async function (err, db){
                     if (err) {
                         console.log('DB error', err);
@@ -138,11 +137,7 @@ exports.updateAccountDetails = async function (req, res){
                     db.close();
                     res.json(response);
                 })
-            }else{                   
-                var response = {
-                    status : false,
-                    message : "File upload Failed"
-                }
+            
                 res.json(response);
             }
         }else{            
