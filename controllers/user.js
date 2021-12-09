@@ -405,6 +405,7 @@ exports.get_emergency_details = async function (req, res){
 
 exports.upload_report = async function (req, res){
     const { body , files} = req;
+    console.log(files);
     await validate_user(body.access_token).then(async (response)=>{
         if(response){    
             var uid = response.uid;
