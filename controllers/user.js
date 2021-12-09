@@ -121,7 +121,7 @@ exports.updateAccountDetails = async function (req, res){
                         $set: {
                             user_name :params.user_name,
                             user_email : params.user_email, 
-                            user_photo : file_url,
+                            // user_photo : file_url,
                             user_status : 'old'
                         }
                     });
