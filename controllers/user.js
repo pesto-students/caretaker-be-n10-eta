@@ -109,37 +109,35 @@ exports.updateAccountDetails = async function (req, res){
             var phone_number = response.phone_number;
             // var fileGettingUploaded = files.profile_photo;
             // var file_url = await upload_file(fileGettingUploaded,'profile_photos' )
-                MongoClient.connect(process.env.MONGO_URL,async function (err, db){
-                    if (err) {
-                        console.log('DB error', err);
-                    }
-                    var _db = db.db(DATABASE_NAME)
-                    const update = await _db.collection(USERS_COLLECTION).updateOne({
-                        "phone_number": phone_number
-                    }, {
-                        $set: {
-                            user_name :params.user_name,
-                            user_email : params.user_email, 
-                            // user_photo : file_url,
-                            user_status : 'old'
-                        }
-                    });
-                    db.close();
-                    var response;
-                    if (update.acknowledged) {
-                        response = {'status': true}                        
-                    }else{
-                        response = {
-                            status : false,
-                            message : "File upload Failed"
-                        }
-                    }
-                    db.close();
-                    res.json(response);
-                })
             
+            MongoClient.connect(process.env.MONGO_URL,async function (err, db){
+                if (err) {
+                    console.log('DB error', err);
+                }
+                var _db = db.db(DATABASE_NAME)
+                const update = await _db.collection(USERS_COLLECTION).updateOne({
+                    "phone_number": phone_number
+                }, {
+                    $set: {
+                        user_name :params.user_name,
+                        user_email : params.user_email, 
+                        // user_photo : file_url,
+                        user_status : 'old'
+                    }
+                });
+                db.close();
+                var response;
+                if (update.acknowledged) {
+                    response = {'status': true}                        
+                }else{
+                    response = {
+                        status : false,
+                        message : "File upload Failed"
+                    }
+                }
+                db.close();
                 res.json(response);
-            }
+            })
         }else{            
             var resp = {
                 status : false,
