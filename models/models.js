@@ -1,6 +1,8 @@
 
 var MongoClient = require('mongodb').MongoClient;
 var ObjectId = require('mongodb').ObjectID;
+
+//Function to insert data in collection
 exports.insert_data =  async function (collection_name, data){
     var response;
     var _db
@@ -18,6 +20,8 @@ exports.insert_data =  async function (collection_name, data){
     dbcon.close();
     return response
 }
+
+//function to add new data to collection
 exports.update_data_push =  async function (collection_name, where , data, operation){
     var response;
     var _db
@@ -36,6 +40,8 @@ exports.update_data_push =  async function (collection_name, where , data, opera
     dbcon.close();
     return response
 }
+
+//Function to update data set in a collection 
 exports.update_data_set =  async function (collection_name, where , data){
     var response;
     var _db
@@ -54,6 +60,8 @@ exports.update_data_set =  async function (collection_name, where , data){
     dbcon.close();
     return response
 }
+
+//Function to fetch data from collection on the basis of collection name and feilds projection
 exports.get_field =  async function (collection_name, where , project){
     console.log('where', where);
     var response;

@@ -4,7 +4,7 @@ var models = require('../models/models')
 var consts= require('../constants/constants')
 const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION}= consts.constants
 
-
+//Controller to upodate the meetings details of the doctor
 exports.doctor_meeting_details = async function (req, res){
     const {access_token, roomName, meetingId,doctor_id } = req.body
     let where = {
@@ -24,6 +24,7 @@ exports.doctor_meeting_details = async function (req, res){
     res.status(200);
 }
 
+//Controller to unset the meeting details of doctor when doctor logs out
 exports.doctor_unset_meeting = async function (req, res){
     const {access_token, doctor_id } = req.body
     console.log('meeting Details', doctor_id)
@@ -44,6 +45,7 @@ exports.doctor_unset_meeting = async function (req, res){
     res.status(200);
 }
 
+//Controller to update doctor availibility statuse when user joins meeting
 exports.user_join_meetings = async function (req, res){
     const {access_token, doctor_id, user_id } = req.body
     let where = {
@@ -61,6 +63,7 @@ exports.user_join_meetings = async function (req, res){
     res.status(200);
 }
 
+//Controller to update doctor availibility statuse when user leaves meeting
 exports.user_leave_meetings = async function (req, res){
     const {access_token, doctor_id, user_id } = req.body
     let where = {

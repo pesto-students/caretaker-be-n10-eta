@@ -10,6 +10,7 @@ var models = require('../models/models')
 var consts= require('../constants/constants')
 const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION}= consts.constants
 
+//Function to upload a file
 async function upload_file (file, folder_name){
     var file_url;
     await cloudinary.uploader.upload(file.tempFilePath,  function(error, result) { file_url = error.url}, {
@@ -20,6 +21,7 @@ async function upload_file (file, folder_name){
     return file_url;
 }
 
+//Function to add a doctor
 exports.doctorAdd = async function (req, res){
     const {phone_number,user_name,doctor_expertise,doctor_experience,doctor_fees } =req.body
     var fileGettingUploaded = req.files.doctorProfilePhoto;
@@ -66,7 +68,7 @@ exports.doctorAdd = async function (req, res){
 
 }
 
-
+//Function to get list of all the doctors
 exports.getDoctors= async function (req, res){
     MongoClient.connect(MONGO_URL, async function(err, db) {
        if (err) throw err;                

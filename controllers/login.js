@@ -15,7 +15,7 @@ admin.initializeApp({
 exports.index = function(req, res) {
     res.send('NOT IMPLEMENTED: Site Home Page');
 };
-
+//Login contorller, takes firebase access token to validate user
 exports.login = function (req, res) {  
     var params = JSON.parse(JSON.stringify(req.body));
     admin.auth()

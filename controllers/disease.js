@@ -12,7 +12,7 @@ var consts= require('../constants/constants')
 const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION}= consts.constants
 
  
-
+//Add disease controller
 exports.addDisease = async function (req, res){
     if (req.body.disease){
         MongoClient.connect(MONGO_URL,async function (err, db){
@@ -46,7 +46,7 @@ exports.addDisease = async function (req, res){
 
 }
 
-
+//Get list of disease controller
 exports.getDisease= async function (req, res){
     MongoClient.connect(MONGO_URL, async function(err, db) {
        if (err) throw err;                
@@ -67,9 +67,7 @@ exports.getDisease= async function (req, res){
    });
 }
 
-
-
-
+//Merge Disease request to an existing Disease
 exports.mergeDisease = async function (req, res){
             if(req.body.disease){
                 MongoClient.connect(MONGO_URL,async function (err, db){
@@ -106,6 +104,7 @@ exports.mergeDisease = async function (req, res){
             }
 }
 
+//Delete and existing disease
 exports.deleteDisease = async function (req, res) {
         const {disease} =req.body
             MongoClient.connect(process.env.MONGO_URL,async function (err, db){

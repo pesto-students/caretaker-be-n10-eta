@@ -15,7 +15,7 @@ const {MONGO_URL} = process.env;
 var consts= require('../constants/constants')
 const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION}= consts.constants
 
-
+//Function to validate a user based on firebase access token
 async function validate_user (access_token){
     var resp;
     await admin.auth()
@@ -30,6 +30,7 @@ async function validate_user (access_token){
     return resp;
 }
 
+//Function to upload a File to cloudinary
 async function upload_file (file, folder_name){
     var file_url;
     await cloudinary.uploader.upload(file.tempFilePath,  function(error, result) { file_url = error.url}, {
@@ -40,6 +41,7 @@ async function upload_file (file, folder_name){
     return file_url;
 }
 
+//Function to upload a file to local/server's storage
 async function upload_local_file (file, folder_name){
     var file_url;
     await cloudinary.uploader.upload(file,  function(error, result) { file_url = error.url}, {
@@ -50,6 +52,7 @@ async function upload_local_file (file, folder_name){
     return file_url;
 }
 
+//Function for OCR, to extract text from report
 async function analyze_report (file){
     var image;
     var xyz = await fs.readFile(file.tempFilePath)
@@ -100,6 +103,7 @@ async function analyze_report (file){
     return data
 }
 
+//Controller fo updating user details
 exports.updateAccountDetails = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
     const {files} = req;
@@ -107,44 +111,37 @@ exports.updateAccountDetails = async function (req, res){
         if(response){      
             var uid = response.uid;
             var phone_number = response.phone_number;
-            var fileGettingUploaded = files.profile_photo;
-            var file_url = await upload_file(fileGettingUploaded,'profile_photos' )
-            if(file_url){
-                MongoClient.connect(process.env.MONGO_URL,async function (err, db){
-                    if (err) {
-                        console.log('DB error', err);
-                    }
-                    var _db = db.db(DATABASE_NAME)
-                    const update = await _db.collection(USERS_COLLECTION).updateOne({
-                        "phone_number": phone_number
-                    }, {
-                        $set: {
-                            user_name :params.user_name,
-                            user_email : params.user_email, 
-                            user_photo : file_url,
-                            user_status : 'old'
-                        }
-                    });
-                    db.close();
-                    var response;
-                    if (update.acknowledged) {
-                        response = {'status': true}                        
-                    }else{
-                        response = {
-                            status : false,
-                            message : "File upload Failed"
-                        }
-                    }
-                    db.close();
-                    res.json(response);
-                })
-            }else{                   
-                var response = {
-                    status : false,
-                    message : "File upload Failed"
+            // var fileGettingUploaded = files.profile_photo;
+            // var file_url = await upload_file(fileGettingUploaded,'profile_photos' )
+            
+            MongoClient.connect(process.env.MONGO_URL,async function (err, db){
+                if (err) {
+                    console.log('DB error', err);
                 }
+                var _db = db.db(DATABASE_NAME)
+                const update = await _db.collection(USERS_COLLECTION).updateOne({
+                    "phone_number": phone_number
+                }, {
+                    $set: {
+                        user_name :params.user_name,
+                        user_email : params.user_email, 
+                        // user_photo : file_url,
+                        user_status : 'old'
+                    }
+                });
+                db.close();
+                var response;
+                if (update.acknowledged) {
+                    response = {'status': true}                        
+                }else{
+                    response = {
+                        status : false,
+                        message : "File upload Failed"
+                    }
+                }
+                db.close();
                 res.json(response);
-            }
+            })
         }else{            
             var resp = {
                 status : false,
@@ -157,6 +154,7 @@ exports.updateAccountDetails = async function (req, res){
 
 }
 
+//Contoller to get user's details 
 exports.getUser_details = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
     const {MONGO_URL} = process.env;
@@ -198,6 +196,7 @@ exports.getUser_details = async function (req, res){
     })
 }
 
+//Controller to create a profile
 exports.create_profile = async function (req, res) {
     var params = JSON.parse(JSON.stringify(req.body));    
     const {MONGO_URL} = process.env;
@@ -205,13 +204,13 @@ exports.create_profile = async function (req, res) {
         if(response){        
             var uid = response.uid;
             var phone_number = response.phone_number;
-            var reports = [];
+            var reports_upload = [];
             var reports_ocr = [];
               if (req.files && Object.keys(req.files).length != 0) {
                   const {reports} = req.files;
                 if (reports && Object.keys(reports).length != 0)
                 {
-                    for(var index of Object.keys(reports)) {
+                    for await(var index of Object.keys(reports)) {
                       const file = reports[index];
                       var file_url = await upload_file(file,'reports')
                       var analyze_report_resp = await analyze_report(file);
@@ -221,7 +220,7 @@ exports.create_profile = async function (req, res) {
                             OCR : analyze_report_resp,
                             uploaded_at : datetime
                         }
-                      reports.push(temp);                                     
+                        reports_upload.push(temp);                                     
                     }
                 }
             }
@@ -240,7 +239,7 @@ exports.create_profile = async function (req, res) {
                 dbData.collection(PROFILES_COLLECTION).insertOne({ user_fb_uid: uid,                 
                     userNumber: phone_number,
                     profile_details :obj,
-                    reports : reports, 
+                    reports : reports_upload, 
                     profile_status : 1, 
                     profile_photo : "",
                     qr_code : ""
@@ -310,6 +309,7 @@ exports.create_profile = async function (req, res) {
     });
 }
 
+//Controller to get list of profiles
 exports.get_profile_list = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
      await validate_user(params.access_token).then(async (response)=>{
@@ -342,6 +342,7 @@ exports.get_profile_list = async function (req, res){
     });
 }
 
+//Controller to delete a particular profile
 exports.delete_profile = async function (req, res) {
     var params = JSON.parse(JSON.stringify(req.body));
     await validate_user(params.access_token).then(async (response)=>{
@@ -378,6 +379,7 @@ exports.delete_profile = async function (req, res) {
     })
 }
 
+//Controller to get emergency details of a particular profile
 exports.get_emergency_details = async function (req, res){    
     var params = JSON.parse(JSON.stringify(req.body));
     var profile_id = params.pid;
@@ -410,8 +412,10 @@ exports.get_emergency_details = async function (req, res){
        
 }
 
+//Controller to upload report on a particular profile
 exports.upload_report = async function (req, res){
     const { body , files} = req;
+    console.log(files);
     await validate_user(body.access_token).then(async (response)=>{
         if(response){    
             var uid = response.uid;
@@ -465,6 +469,8 @@ exports.upload_report = async function (req, res){
         }
     })
 }
+
+//Function to get report of a particular profile
 exports.get_report = async function (req, res){
     const { body , files} = req;
     await validate_user(body.access_token).then(async (response)=>{
@@ -504,6 +510,8 @@ exports.get_report = async function (req, res){
         }
     })
 }
+
+//Controller to update details of particular profile
 exports.update_profile = async function (req, res){
     const { body , files} = req;
     await validate_user(body.access_token).then(async (response)=>{
@@ -547,6 +555,7 @@ exports.update_profile = async function (req, res){
     }) 
 }
 
+//Controller to get dahboard data of particular profile
 exports.get_dashboard_data = async function (req, res){
     const { body , files} = req;
     await validate_user(body.access_token).then(async (response)=>{
