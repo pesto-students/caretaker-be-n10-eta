@@ -15,7 +15,7 @@ const {MONGO_URL} = process.env;
 var consts= require('../constants/constants')
 const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION}= consts.constants
 
-
+//Function to validate a user based on firebase access token
 async function validate_user (access_token){
     var resp;
     await admin.auth()
@@ -30,6 +30,7 @@ async function validate_user (access_token){
     return resp;
 }
 
+//Function to upload a File to cloudinary
 async function upload_file (file, folder_name){
     var file_url;
     await cloudinary.uploader.upload(file.tempFilePath,  function(error, result) { file_url = error.url}, {
@@ -40,6 +41,7 @@ async function upload_file (file, folder_name){
     return file_url;
 }
 
+//Function to upload a file to local/server's storage
 async function upload_local_file (file, folder_name){
     var file_url;
     await cloudinary.uploader.upload(file,  function(error, result) { file_url = error.url}, {
@@ -50,6 +52,7 @@ async function upload_local_file (file, folder_name){
     return file_url;
 }
 
+//Function for OCR, to extract text from report
 async function analyze_report (file){
     var image;
     var xyz = await fs.readFile(file.tempFilePath)
@@ -100,6 +103,7 @@ async function analyze_report (file){
     return data
 }
 
+//Controller fo updating user details
 exports.updateAccountDetails = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
     const {files} = req;
@@ -150,6 +154,7 @@ exports.updateAccountDetails = async function (req, res){
 
 }
 
+//Contoller to get user's details 
 exports.getUser_details = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
     const {MONGO_URL} = process.env;
@@ -191,6 +196,7 @@ exports.getUser_details = async function (req, res){
     })
 }
 
+//Controller to create a profile
 exports.create_profile = async function (req, res) {
     var params = JSON.parse(JSON.stringify(req.body));    
     const {MONGO_URL} = process.env;
@@ -303,6 +309,7 @@ exports.create_profile = async function (req, res) {
     });
 }
 
+//Controller to get list of profiles
 exports.get_profile_list = async function (req, res){
     var params = JSON.parse(JSON.stringify(req.body));
      await validate_user(params.access_token).then(async (response)=>{
@@ -335,6 +342,7 @@ exports.get_profile_list = async function (req, res){
     });
 }
 
+//Controller to delete a particular profile
 exports.delete_profile = async function (req, res) {
     var params = JSON.parse(JSON.stringify(req.body));
     await validate_user(params.access_token).then(async (response)=>{
@@ -371,6 +379,7 @@ exports.delete_profile = async function (req, res) {
     })
 }
 
+//Controller to get emergency details of a particular profile
 exports.get_emergency_details = async function (req, res){    
     var params = JSON.parse(JSON.stringify(req.body));
     var profile_id = params.pid;
@@ -403,6 +412,7 @@ exports.get_emergency_details = async function (req, res){
        
 }
 
+//Controller to upload report on a particular profile
 exports.upload_report = async function (req, res){
     const { body , files} = req;
     console.log(files);
@@ -459,6 +469,8 @@ exports.upload_report = async function (req, res){
         }
     })
 }
+
+//Function to get report of a particular profile
 exports.get_report = async function (req, res){
     const { body , files} = req;
     await validate_user(body.access_token).then(async (response)=>{
@@ -498,6 +510,8 @@ exports.get_report = async function (req, res){
         }
     })
 }
+
+//Controller to update details of particular profile
 exports.update_profile = async function (req, res){
     const { body , files} = req;
     await validate_user(body.access_token).then(async (response)=>{
@@ -541,6 +555,7 @@ exports.update_profile = async function (req, res){
     }) 
 }
 
+//Controller to get dahboard data of particular profile
 exports.get_dashboard_data = async function (req, res){
     const { body , files} = req;
     await validate_user(body.access_token).then(async (response)=>{
