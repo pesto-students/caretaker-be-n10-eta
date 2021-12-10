@@ -6,6 +6,7 @@ var diseaseRouter = require('./routes/disease');
 var reqDiseaseRouter = require('./routes/reqDisease');
 var adminRouter = require('./routes/admin')
 var payment = require('./routes/payment')
+var meetings = require('./routes/meetings')
 
 // const app = require('./api/index');
 var express = require('express');
@@ -30,10 +31,11 @@ app.use('/',diseaseRouter);
 app.use('/',reqDiseaseRouter);
 app.use('/',adminRouter)
 app.use('/',payment)
-var server = app.listen(process.env.PORT || 8081, function () {
-    var host = server.address().address
-    var port = server.address().port    
-    console.log("Care Tracker listening at http://%s:%s", host, port)
+app.use('/',meetings)
+module.exports =   app.listen(process.env.PORT || 8081, function () {
+   // var host = server.address().address
+    //var port = server.address().port    
+    console.log("Care Tracker listening at http://:8081")
 })
 
 

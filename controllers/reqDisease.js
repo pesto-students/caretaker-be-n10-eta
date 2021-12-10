@@ -5,6 +5,8 @@ var ObjectId = require('mongodb').ObjectID;
 var admin = require("firebase-admin");
 var models = require('../models/models')
 var validate = require('./validateUser')
+var consts= require('../constants/constants')
+const{DATABASE_NAME,REQUEST_DISEASE_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION,RAZORPAY_ORDERS_COLLECTION}= consts.constants
 
  
 exports.addReqDisease = async function (req, res){
@@ -15,15 +17,14 @@ exports.addReqDisease = async function (req, res){
                     if (!err) {
                         console.log('Connected to DB',err);
                     }
-                    var _db = db.db('care_tracker')
+                    var _db = db.db(DATABASE_NAME)
                     var searchNumber =await _db.collection("disease").findOne({'disease' :reqDisease}, async function(err, result) {
                     if (err) throw err;
-                    console.log(result);
                     if(result){ 
                         var response = {'status': false, message : "Disease Arealdy Exists"}
                         res.json(response);
                     }else{
-                        await _db.collection('reqDisease').insertOne({
+                        await _db.collection(REQUEST_DISEASE_COLLECTION).insertOne({
                             reqDisease :reqDisease,
                             userName : userName
                         })
@@ -47,8 +48,8 @@ exports.addReqDisease = async function (req, res){
 exports.getReqDisease= async function (req, res){
     MongoClient.connect(process.env.MONGO_URL, async function(err, db) {
        if (err) throw err;                
-       var dbData = db.db('care_tracker')
-       const insert = await dbData.collection("reqDisease").find({})
+       var dbData = db.db(DATABASE_NAME)
+       const insert = await dbData.collection(REQUEST_DISEASE_COLLECTION).find({})
            .toArray(function (err, result) {
                if (err) throw err;
                var resp = {
@@ -57,7 +58,7 @@ exports.getReqDisease= async function (req, res){
                }
                res.status(200);
                res.json(resp);
-               // res.json(result);
+               
            });
            db.close();
       
@@ -68,17 +69,16 @@ exports.getReqDisease= async function (req, res){
 exports.deleteReqDisease = async function (req, res) {
         const {reqDisease} =req.body
             MongoClient.connect(process.env.MONGO_URL,async function (err, db){
-                if (!err) {
-                    console.log('Connected to DB');
+                if (err) {
+                    console.log('DB error',err);
                 }
-                var _db = db.db('care_tracker')
-                const deleteP = await _db.collection('reqDisease').deleteOne(
+                var _db = db.db(DATABASE_NAME)
+                const deleteP = await _db.collection(REQUEST_DISEASE_COLLECTION).deleteOne(
                     {
                         "reqDisease" :reqDisease
                     }
                     
                     );
-                    console.log(deleteP);
                     if (deleteP.deletedCount) {
                         
                         var result = {'status': true ,message :"Successfully Delete requested Disease"}

@@ -8,39 +8,32 @@ const { CLOUDINARY_CONFIG, MONGO_URL} = process.env
 cloudinary.config(CLOUDINARY_CONFIG);
 
 var models = require('../models/models')
+var consts= require('../constants/constants')
+const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION}= consts.constants
 
-async function upload_file (file, folder_name){
-    var file_url;
-    await cloudinary.uploader.upload(file.tempFilePath,  function(error, result) { file_url = error.url}, {
-        folder: folder_name,
-        use_filename: true,
-        unique_filename : true,
-        });
-    return file_url;
-}
+ 
 
 exports.addDisease = async function (req, res){
     if (req.body.disease){
         MongoClient.connect(MONGO_URL,async function (err, db){
-            if (!err) {
-                console.log('Connected to DB',err);
+            if (err) {
+                console.log('Error connection DB',err);
             }
-            var _db = db.db('care_tracker')
-            var searchNumber =await _db.collection("disease").findOne({'disease' :req.body.disease}, async function(err, result) {
+            var _db = db.db(DATABASE_NAME)
+            var searchNumber =await _db.collection(DISEASE_COLLECTION).findOne({'disease' :req.body.disease}, async function(err, result) {
             if (err) throw err;
-            console.log(result);
             if(result){ 
                 var response = {'status': false, message : "Disease Arealdy Exists"}
                 res.json(response);
             }else{
-                await _db.collection('disease').insertOne({
+                await _db.collection(DISEASE_COLLECTION).insertOne({
                     disease :req.body.disease,
                 })
                 var response = {'status': true, message : "Add Disease successfully"}
                 res.json(response);
              }
              })
-             //db.close();
+            
         })
           db.close();
     }else{                   
@@ -57,8 +50,8 @@ exports.addDisease = async function (req, res){
 exports.getDisease= async function (req, res){
     MongoClient.connect(MONGO_URL, async function(err, db) {
        if (err) throw err;                
-       var dbData = db.db('care_tracker')
-       const insert = await dbData.collection("disease").find({})
+       var dbData = db.db(DATABASE_NAME)
+       const insert = await dbData.collection(DISEASE_COLLECTION).find({})
            .toArray(function (err, result) {
                if (err) throw err;
                var resp = {
@@ -67,7 +60,7 @@ exports.getDisease= async function (req, res){
                }
                res.status(200);
                res.json(resp);
-               // res.json(result);
+             
            });
            db.close();
       
@@ -83,8 +76,8 @@ exports.mergeDisease = async function (req, res){
                     if (err) {
                         console.log('DB error', err);
                     }
-                    var _db = db.db('care_tracker')
-                    const update = await _db.collection('disease').updateOne({
+                    var _db = db.db(DATABASE_NAME)
+                    const update = await _db.collection(DISEASE_COLLECTION).updateOne({
                         "disease": req.body.disease
                     }, {
                         $set: {
@@ -94,20 +87,20 @@ exports.mergeDisease = async function (req, res){
                    
                     var response;
                     if (update.acknowledged) {
-                        response = {'status': true}                        
+                        response = {'status': true , message :"Successfully Merge Disease"}                        
                     }else{
                         response = {
                             status : false,
                             message : "Merge Failed"
                         }
                     }
-                    //db.close(); 
+                   
                     res.json(response);
                 })
             }else{                   
                 var response = {
                     status : false,
-                    message : "File upload Failed"
+                    message : "Invalid data"
                 }
                 res.json(response);
             }
@@ -119,8 +112,8 @@ exports.deleteDisease = async function (req, res) {
                 if (!err) {
                     console.log('Connected to DB');
                 }
-                var _db = db.db('care_tracker')
-                const deleteP = await _db.collection('disease').deleteOne(
+                var _db = db.db(DATABASE_NAME)
+                const deleteP = await _db.collection(DISEASE_COLLECTION).deleteOne(
                     {
                         "disease" :disease
                     }                    
