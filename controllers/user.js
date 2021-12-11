@@ -72,10 +72,6 @@ async function analyze_report (file){
             }
         }
     };
-    if(!upload.failed){
-        // console.log('upload', upload)
-        
-    }
     const command = new DetectTextCommand(params);
     const response = await client.send(command,params);
     var size  = Object.keys(response.TextDetections).length;
@@ -432,6 +428,7 @@ exports.upload_report = async function (req, res){
                   const file = req.files.reports[index];
                   var file_url = await upload_file(file,'reports')
                   var analyze_report_resp = await analyze_report(file);
+                  console.log('Report Analysis', analyze_report_resp)
                     var datetime = new Date();
                     var temp = {
                         file_url : file_url,
