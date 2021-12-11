@@ -258,7 +258,10 @@ exports.create_profile = async function (req, res) {
                           }, async function (err) {
                             if (err){
                                 console.log(err)                                 
-                            }                         
+                            }else{
+                                console.log("QR code Generated");
+                            }   
+                                                  
                             var qrlink = await upload_local_file(filepath,'qrcodes') 
                             MongoClient.connect(MONGO_URL,async function (err, db){
                                 var _db = db.db(DATABASE_NAME)
