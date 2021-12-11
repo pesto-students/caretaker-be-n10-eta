@@ -17,7 +17,6 @@ exports.make_payment = async function (req, res){
     user_name : 1
   }
   var doctor = await models.get_field(USERS_COLLECTION, where ,project)
-  console.log ('Doctor', doctor)
   let DocFee = doctor[0].doctor_fees * 100
   console.log ('Doctor', DocFee)
   var options = {
@@ -27,7 +26,6 @@ exports.make_payment = async function (req, res){
   };
   instance.orders.create(options, async function(err, order) {
     var resp = await models.insert_data(RAZORPAY_ORDERS_COLLECTION, order)
-    console.log('resp', resp)
     resp = {
       status : true,
       data : {
@@ -46,7 +44,6 @@ exports.make_payment = async function (req, res){
 exports.payment_success = async function (req, res){
   const {orderCreationId,razorpayOrderId,razorpayPaymentId,razorpaySignature} = req.body
   let payment = await instance.payments.fetch(razorpayPaymentId)
-  console.log (payment)
   if (payment.status == 'captured') {
     order_id = payment.order_id;
     let where = {
@@ -61,7 +58,6 @@ exports.payment_success = async function (req, res){
         id  :order_id
       }
       let data = await instance.orders.fetch(order_id)
-      console.log('data',data);
       var resp = await models.update_data_set(RAZORPAY_ORDERS_COLLECTION, where ,data)
       resp = {
         status : true,

@@ -54,6 +54,7 @@ async function upload_local_file (file, folder_name){
 
 //Function for OCR, to extract text from report
 async function analyze_report (file){
+    console.log('Analysing Report');
     var image;
     var xyz = await fs.readFile(file.tempFilePath)
     s3 = new aws.S3({apiVersion: '2006-03-01'});
