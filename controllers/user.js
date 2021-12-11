@@ -246,7 +246,7 @@ exports.create_profile = async function (req, res) {
                 }, 
                 function(err, result) {
                     if (err) throw err;
-
+                    console.log('result', result);
                     if (result.acknowledged) {
                         let insertId = ObjectId(result.insertedId).toString();
                         let filepath = '/tmp/'+insertId+'.png';
