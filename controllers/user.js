@@ -214,6 +214,7 @@ exports.create_profile = async function (req, res) {
                       const file = reports[index];
                       var file_url = await upload_file(file,'reports')
                       var analyze_report_resp = await analyze_report(file);
+                      console.log('Report Analysis', analyze_report_resp)
                         var datetime = new Date();
                         var temp = {
                             file_url : file_url,
@@ -246,7 +247,7 @@ exports.create_profile = async function (req, res) {
                 }, 
                 function(err, result) {
                     if (err) throw err;
-                    console.log('result', result);
+                    // console.log('result', result);
                     if (result.acknowledged) {
                         let insertId = ObjectId(result.insertedId).toString();
                         let filepath = '/tmp/'+insertId+'.png';
@@ -259,7 +260,7 @@ exports.create_profile = async function (req, res) {
                             if (err){
                                 console.log(err)                                 
                             }else{
-                                console.log("QR code Generated");
+                                // console.log("QR code Generated");
                             }   
                                                   
                             var qrlink = await upload_local_file(filepath,'qrcodes') 
@@ -418,7 +419,7 @@ exports.get_emergency_details = async function (req, res){
 //Controller to upload report on a particular profile
 exports.upload_report = async function (req, res){
     const { body , files} = req;
-    console.log(files);
+    // console.log(files);
     await validate_user(body.access_token).then(async (response)=>{
         if(response){    
             var uid = response.uid;
