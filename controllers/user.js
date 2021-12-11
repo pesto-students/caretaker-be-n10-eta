@@ -266,12 +266,12 @@ exports.create_profile = async function (req, res) {
                             MongoClient.connect(MONGO_URL,async function (err, db){
                                 var _db = db.db(DATABASE_NAME)
                                 var ObjectId = require('mongodb').ObjectID;
-                                var profile_photo = ""
+                                var profile_photo_upload = ""
                                 if (req.files && Object.keys(req.files).length != 0) {
                                     const { profile_photo} = req.files;
                                     if(profile_photo){
                                         var fileGettingUploaded = profile_photo;
-                                        profile_photo = await upload_file(fileGettingUploaded,'profile_photos' )
+                                        profile_photo_upload = await upload_file(fileGettingUploaded,'profile_photos' )
                                     }
                                 }
                                const update = await _db.collection(PROFILES_COLLECTION).updateOne({
@@ -279,7 +279,7 @@ exports.create_profile = async function (req, res) {
                                 }, {
                                     $set: {
                                         qr_code : qrlink,
-                                        profile_photo : profile_photo
+                                        profile_photo : profile_photo_upload
                                     }
                                 });
                                 unlink(filepath, (err) => {
