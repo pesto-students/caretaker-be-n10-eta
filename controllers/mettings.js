@@ -8,6 +8,7 @@ const{DATABASE_NAME,PROFILES_COLLECTION,USERS_COLLECTION,DISEASE_COLLECTION}= co
 exports.doctor_meeting_details = async function (req, res){
     const {access_token, roomName, meetingId,doctor_id } = req.body
     console.log('Details',meetingId,roomName,doctor_id);
+    console.log('Details',req.body);
     let where = {
         _id  :ObjectId(doctor_id)
       }

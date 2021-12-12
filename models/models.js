@@ -31,7 +31,7 @@ exports.update_data_push =  async function (collection_name, where , data, opera
     const update = await db.collection(collection_name).updateOne(where, {
         $push: data
     });
-    console.log('update', update);
+    // console.log('update', update);
     if (update.acknowledged) { 
         response =true; 
     } else {

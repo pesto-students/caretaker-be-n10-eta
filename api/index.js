@@ -182,7 +182,7 @@ app.post('/updateAccountDetails', async function (req, res){
                             user_status : 'old'
                         }
                     });
-                    console.log('update',update)
+                    // console.log('update',update)
                     var response;
                     if (update.acknowledged) {
                         response = {'status': true}                        
