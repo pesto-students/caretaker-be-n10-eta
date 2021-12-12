@@ -26,8 +26,8 @@ exports.login = function (req, res) {
             if (!err) {
                 var _db = db.db('care_tracker')
                 var search_result = true;
-                const search = await _db.collection(USERS_COLLECTION).findOne({'phone_number' :decodedToken.phone_number}, async function(err, result) {
-                    if (err) throw err;
+                const search = await _db.collection(USERS_COLLECTION).findOne({'phone_number' :decodedToken.phone_number}, async function(err1, result) {
+                    if (err1) throw err1;
                     if(!result){                        
                         search_result = false;
                         var UserDetails = {
