@@ -48,6 +48,7 @@ exports.doctor_unset_meeting = async function (req, res){
 
 //Controller to update doctor availibility statuse when user joins meeting
 exports.user_join_meetings = async function (req, res){
+  console.log('req',req);
     const {access_token, doctor_id, user_id } = req.body
     let where = {
         _id  :ObjectId(doctor_id)
