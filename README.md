@@ -88,8 +88,10 @@ REACT_APP_PAY_ID=<br />
 
 We tried to use a completely modern tech stack while testing out some new technologies that we had never used before. This resulted in a fast, performant, and easily-extensible web app that should be fairly future-proof for the coming next several years. We used:
 
-- [Ant design](https://ant.design/)
-- [Axios](https://axios-http.com/docs/intro)
+- [Node Js](https://nodejs.org/en/)
+- [Express Js](https://expressjs.com/)
+- [monogo DB](https://www.mongodb.com/)
+- [AWS Rekognition](https://aws.amazon.com/rekognition/image-features/)
 
 <br/>
 
