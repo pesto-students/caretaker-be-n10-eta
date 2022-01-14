@@ -52,7 +52,7 @@ Test Credentials:
 
 1. Clone the repo
     ```sh
-    git clonehttps://github.com/pesto-students/caretaker-fe-n10-eta.git careTracker-fe
+    git clonehttps://github.com/pesto-students/caretaker-be-n10-eta.git careTracker-be
     ```
 2. Set environment variables
 
@@ -70,13 +70,13 @@ REACT_APP_PAY_ID=<br />
 
 3. Install NPM packages
     ```sh
-    cd caretaker-fe-n10-eta && npm install
+    cd caretaker-be-n10-eta && npm install
     ```
 4. Run
     ```sh
     npm start
     ```
-5. Open http://localhost:3000 to view it in the browser
+5. Open http://localhost:8000 to view it in the browser
 
 6. Run Test cases
     ```sh
