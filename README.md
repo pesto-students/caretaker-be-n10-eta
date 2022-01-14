@@ -5,6 +5,7 @@
 </p>
 We are living in the age of pandemics, where taking care of personal and loved ones health is the most important. When it comes to storing and searching different medical reports physically in our home is really a difficult task. With care tracker, we are providing an application where you can store your reports in one place and track your health on the basis of these reports. We are also providing different features like doctor consultation, the emergency feature which can be a great help during some emergencies.
 
+
 Welcome! we hope you enjoy the site as much as we enjoyed making it.
  
   
@@ -94,11 +95,10 @@ We tried to use a completely modern tech stack while testing out some new techno
 
 # Authors
 
--Akshay Awasthi - [GiHub](https://github.com/akshayawasthi3) - [Email](mailto:akshayawasthi3@gmail.com)
+- [Akshay Awasthi](https://github.com/akshayawasthi3)
+- [Dinesh Yadav](https://github.com/dinesh0191)
+- [Kapil Harode](https://github.com/kapilharode) 
 
--Kapil Harode - [GiHub](https://github.com/kapilharode) - [Email](mailto:kapilharodek4@gmail.com)
-
--Dinesh Yadav - [GiHub](https://github.com/dinesh0191) - [Email](mailto:dinesh0191@gmail.com)
 <br/>
 
 # License
