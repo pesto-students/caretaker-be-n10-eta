@@ -105,6 +105,4 @@ We tried to use a completely modern tech stack while testing out some new techno
 
 [MIT](https://opensource.org/licenses/MIT)
 
-<!-- ABOUT THE PROJECT -->
 
-## Demo
